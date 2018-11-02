@@ -1,6 +1,7 @@
 # Parsing of the command options for this program
 
 import argparse
+from sys import argv
 
 from executer import Executer
 
@@ -10,24 +11,23 @@ subparsers = parser.add_subparsers()
 
 exgp.add_argument('--version', help='shows the version of dockerctl', action="store_true")
 
-start_p = subparsers.add_parser('start')
-start_p.add_argument('compose_name', type=str, help='name of the docker-compose')
+parser.add_argument("command", choices=['start', 'restart', 'stop', 'ps'], help="Command for docker-compose")
+parser.add_argument("compose_name", type=str, help="name of specific docker-compose folder", nargs='?')
 
-stop_p = subparsers.add_parser('stop')
-stop_p.add_argument('compose_name', type=str, help='name of specific docker compose')
 
-restart_p = subparsers.add_parser('restart')
-restart_p.add_argument('compose_name', type=str, help='name of specific docker compose')
+def options(args):
+    if args.command == 'start':
+        Executer.start(args.compose_name)
+    elif args.command == 'restart':
+        Executer.restart(args.compose_name)
+    elif args.command == 'stop':
+        Executer.stop(args.compose_name)
+    elif args.command == 'ps':
+        Executer.processes(args.compose_name)
+    elif args.version:
+        print("version 0.1")
 
-args = parser.parse_args()
 
-compose_name =
-
-start_p.set_defaults(func=Executer.start(compose_name))
-
-restart_p.set_defaults(func=Executer.restart(compose_name))
-
-stop_p.set_defaults(func=Executer.stop(compose_name))
-
-if args.version:
-    print("version 0.1")
+args = parser.parse_args("start", "call-counter-redis")
+options(args)
+print(argparse.Namespace)

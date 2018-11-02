@@ -1,3 +1,5 @@
 .idea/
 venv/
 .directory
+executer-test.py
+__pycache__/

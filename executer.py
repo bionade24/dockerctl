@@ -5,20 +5,22 @@ import os
 
 class Executer():
 
-    @classmethod
-    def start(args):
-      compose_dir = '/etc/docker/' + args
+    def start(compose_name):
+      compose_dir = '/etc/docker/' + compose_name
       os.chdir(compose_dir)
       os.system('docker-compose start')
 
-    @classmethod
-    def stop(args):
-      compose_dir = '/etc/docker/' + args
+    def stop(compose_name):
+      compose_dir = '/etc/docker/' + compose_name
       os.chdir(compose_dir)
       os.system('docker-compose stop')
 
-    @classmethod
-    def restart(args):
-      compose_dir = '/etc/docker/' + args
+    def restart(compose_name):
+      compose_dir = '/etc/docker/' + compose_name
       os.chdir(compose_dir)
       os.system('docker-compose restart')
+
+    def processes(compose_name):
+        compose_dir = '/etc/docker/' + compose_name
+        os.chdir(compose_dir)
+        os.system('docker-compose ps')
