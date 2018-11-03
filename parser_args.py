@@ -30,4 +30,3 @@ def options(args):
 
 args = parser.parse_args("start", "call-counter-redis")
 options(args)
-print(argparse.Namespace)
