@@ -2,7 +2,7 @@
 
 import sys
 import argparse
-from dockerctl.executer import Executer
+from dockerctl import executer
 
 version_nr = "0.1"
 
@@ -10,13 +10,13 @@ version_nr = "0.1"
 def compose_start(option, compose_name):
     for name in compose_name:
         if option == "start":
-            Executer.start(name)
+            executer.start(name)
         elif option == "stop":
-            Executer.stop(name)
+            executer.stop(name)
         elif option == "restart":
-            Executer.restart(name)
+            executer.restart(name)
         elif option == "ps":
-            Executer.processes(name)
+            executer.processes(name)
         else:
             break
 
