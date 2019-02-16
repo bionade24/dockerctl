@@ -2,7 +2,7 @@
 
 import sys
 import argparse
-from executer import Executer
+from dockerctl.executer import Executer
 
 version_nr = "0.1"
 
@@ -34,5 +34,5 @@ def main(argv):
     compose_start(args.action, args.compose_name)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.argv[1:])
