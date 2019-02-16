@@ -4,8 +4,7 @@ import sys
 import argparse
 from executer import Executer
 
-
-version = "0.1"
+version_nr = "0.1"
 
 
 def compose_start(option, compose_name):
@@ -22,18 +21,16 @@ def compose_start(option, compose_name):
             break
 
 
-
 def main(argv):
-    parser = argparse.ArgumentParser(prog='dockerctl', add_help=False)
+    parser = argparse.ArgumentParser(prog='dockerctl', add_help=True)
     exgroup = parser.add_mutually_exclusive_group()
 
-    exgroup.add_argument('-v', '--version', action="store_true", help="print version number")
+    exgroup.add_argument('-v', '--version', action="version", version='dockerctl ' + version_nr,
+                         help="print version number")
     parser.add_argument('action', choices=['start', 'stop', 'restart', 'ps'])
     parser.add_argument('compose_name', type=str, nargs='+')
 
     args = parser.parse_args(argv)
-    if args.version:
-        print("version " + version)
     compose_start(args.action, args.compose_name)
 
 
