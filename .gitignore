@@ -3,3 +3,7 @@ venv/
 .directory
 executer-test.py
 __pycache__/
+parser_args.py
+dist/
+dockerctl.egg-info/
+build/

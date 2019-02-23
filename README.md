@@ -1,3 +1,7 @@
 # dockerctl
 
-Python Script to start, stop and restart docker-compose-yaml's from everywhere.
+Python Script to steer (multiple) docker-compose-yaml's from everywhere.
+
+Installation: `pip install dockerctl`
+
+This program is released under the GPLv3. See "LICENSE" for further information.
