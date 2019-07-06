@@ -34,14 +34,19 @@ def main(argv):
     exgroup = parser.add_mutually_exclusive_group()
 
     exgroup.add_argument('-v', '--version', action="version", version='dockerctl ' + version_nr,
-                         help="print version number")
-    parser.add_argument('--path', '--dir', type=str)
-    parser.add_argument('action', choices=['start', 'stop', 'restart', 'ps', 'up', ' kill', 'rm', 'top', 'logs',
-                                           'images', 'port', 'pull', 'push', 'pause', 'unpause'])
-    parser.add_argument('compose_name', type=str, nargs='+')
+                         help="Print version number")
+    # common commands
+    parser.add_argument('command', choices=['start', 'stop', 'restart', 'ps', 'up', ' kill', 'rm', 'top', 'logs',
+                                            'images', 'port', 'pull', 'push', 'pause', 'unpause', 'add', 'remove'])
+    parser.add_argument('compose_name', type=str)
+    # command options
+    parser.add_argument('--path', metavar='PATH', type=str, help="Link path to yaml into /etc/docker/name")
 
     args = parser.parse_args(argv)
-    compose_start(args.action, args.compose_name)
+
+    if args.path and args.command == "add":
+        executer.add(args.compose_name, args.path)
+    compose_start(args.command, args.compose_name)
 
 
 if __name__ == '__main__':

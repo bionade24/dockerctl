@@ -3,13 +3,6 @@
 import os
 
 
-def path(self):
-    if self != "":
-        return self + '/'
-    else:
-        return '/etc/docker/'
-
-
 def start(compose_name):
     compose_dir = path + compose_name
     os.chdir(compose_dir)
@@ -98,3 +91,19 @@ def logss(compose_name):
     compose_dir = path + compose_name
     os.chdir(compose_dir)
     os.system('docker-compose logs')
+
+
+def add(compose_name, path):
+    if not path:
+        add(compose_name, os.curdir+"/")
+    elif "docker-compose.yaml" in path:
+        add(compose_name, path.rstrip("docker-compose.yaml"))
+    elif "docker-compose.yml" in path:
+        add(compose_name, path.rstrip("docker-compose.yml"))
+    else:
+        path = path.rstrip("/")
+        os.symlink(path, "/etc/docker/" + compose_name)
+
+
+def remove(compose_name):
+    os.remove("/etc/docker/" + compose_name)
