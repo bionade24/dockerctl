@@ -4,36 +4,35 @@ import sys
 import argparse
 from dockerctl import executer
 
-version_nr = "0.1"
+version_nr = "0.2"
 
 
 def compose_start(option, compose_name):
     args = {
-        "start" : executer.start(compose_name),
-        "stop" : executer.stop(compose_name),
-        "restart" : executer.restart(compose_name),
-        "ps": executer.processes(compose_name),
-        "up" : executer.up(compose_name),
-        "kill" : executer.kill(compose_name),
-        "pull" : executer.pull(compose_name),
-        "push" : executer.push(compose_name),
-        "rm" : executer.remove(compose_name),
-        "top" : executer.top(compose_name),
-        "pause" : executer.pause(compose_name),
-        "unpause" : executer.unpause(compose_name),
-        "images" : executer.images(compose_name),
-        "port" : executer.port(compose_name),
-        "logs" : executer.logs(compose_name),
+        "start"  : executer.start,
+        "stop"   : executer.stop,
+        "restart": executer.restart,
+        "ps"     : executer.processes,
+        "up"     : executer.up,
+        "kill"   : executer.kill,
+        "pull"   : executer.pull,
+        "push"   : executer.push,
+        "rm"     : executer.rm,
+        "top"    : executer.top,
+        "pause"  : executer.pause,
+        "unpause": executer.unpause,
+        "images" : executer.images,
+        "port"   : executer.port,
+        "logs"   : executer.logs,
+        "add"    : executer.add,
+        "remove" : executer.remove,
     }
-    for i in option[1:]:
-        args[option](compose_name)
+    args[option](compose_name)
 
 
 def main(argv):
     parser = argparse.ArgumentParser(prog='dockerctl', add_help=True)
-    exgroup = parser.add_mutually_exclusive_group()
-
-    exgroup.add_argument('-v', '--version', action="version", version='dockerctl ' + version_nr,
+    parser.add_argument('-v', '--version', action="version", version='dockerctl ' + version_nr,
                          help="Print version number")
     # common commands
     parser.add_argument('command', choices=['start', 'stop', 'restart', 'ps', 'up', ' kill', 'rm', 'top', 'logs',
