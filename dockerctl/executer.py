@@ -20,7 +20,7 @@ class Commands:
     def restart(self):
         subprocess.run(['docker-compose', 'restart'], cwd=self.path)
 
-    def processes(self):
+    def ps(self):
         subprocess.run(['docker-compose', 'ps'], cwd=self.path)
 
     def up(self):
