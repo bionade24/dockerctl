@@ -1,81 +1,53 @@
 # executes the commands for docker-compose
-
+import subprocess
 import os
 
 
-def start(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose start')
 
+def start(compose_name):
+    subprocess.run(['docker-compose', 'start'], cwd='/etc/docker' + compose_name)
 
 def stop(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose stop')
-
+    subprocess.run(['docker-compose', 'stop'], cwd='/etc/docker' + compose_name)
 
 def restart(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose restart')
-
+    subprocess.run(['docker-compose', 'restart'], cwd='/etc/docker' + compose_name)
 
 def processes(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose ps')
-
+    subprocess.run(['docker-compose', 'ps'], cwd='/etc/docker' + compose_name)
 
 def up(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose up -d')
-
+    subprocess.run(['docker-compose', 'up -d'], cwd='/etc/docker' + compose_name)
 
 def kill(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose kill')
-
+    subprocess.run(['docker-compose', 'kill'], cwd='/etc/docker' + compose_name)
 
 def pull(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose pull')
-
+    subprocess.run(['docker-compose', 'pull'], cwd='/etc/docker' + compose_name)
 
 def push(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose push')
-
+    subprocess.run(['docker-compose', 'push'], cwd='/etc/docker' + compose_name)
 
 def rm(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose rm')
-
+    subprocess.run(['docker-compose', 'rm'], cwd='/etc/docker' + compose_name)
 
 def top(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose top')
-
+    subprocess.run(['docker-compose', 'top'], cwd='/etc/docker' + compose_name)
 
 def pause(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose pause')
-
+    subprocess.run(['docker-compose', 'pause'], cwd='/etc/docker' + compose_name)
 
 def unpause(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose unpause')
-
+    subprocess.run(['docker-compose', 'unpause'], cwd='/etc/docker' + compose_name)
 
 def images(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose images')
-
+    subprocess.run(['docker-compose', 'images'], cwd='/etc/docker' + compose_name)
 
 def port(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose port')
-
+    subprocess.run(['docker-compose', 'port'], cwd='/etc/docker' + compose_name)
 
 def logs(compose_name):
-    os.chdir('/etc/docker/' + compose_name)
-    os.system('docker-compose logs')
+    subprocess.run(['docker-compose', 'logs'], cwd='/etc/docker' + compose_name)
 
 
 def add(compose_name, path):
