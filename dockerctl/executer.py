@@ -3,64 +3,70 @@ import subprocess
 import os
 
 
+class Commands:
 
-def start(compose_name):
-    subprocess.run(['docker-compose', 'start'], cwd='/etc/docker' + compose_name)
+    def __init__(self, compose_name, path):
+        self.compose_name = compose_name
+        self.path = '/etc/docker/' + compose_name
+        self.newpath = path
+        print(self.path)
 
-def stop(compose_name):
-    subprocess.run(['docker-compose', 'stop'], cwd='/etc/docker' + compose_name)
+    def start(self):
+        subprocess.run(['docker-compose', 'start'], cwd=self.path)
 
-def restart(compose_name):
-    subprocess.run(['docker-compose', 'restart'], cwd='/etc/docker' + compose_name)
+    def stop(self):
+        subprocess.run(['docker-compose', 'stop'], cwd=self.path)
 
-def processes(compose_name):
-    subprocess.run(['docker-compose', 'ps'], cwd='/etc/docker' + compose_name)
+    def restart(self):
+        subprocess.run(['docker-compose', 'restart'], cwd=self.path)
 
-def up(compose_name):
-    subprocess.run(['docker-compose', 'up -d'], cwd='/etc/docker' + compose_name)
+    def processes(self):
+        subprocess.run(['docker-compose', 'ps'], cwd=self.path)
 
-def kill(compose_name):
-    subprocess.run(['docker-compose', 'kill'], cwd='/etc/docker' + compose_name)
+    def up(self):
+        subprocess.run(['docker-compose', 'up -d'], cwd=self.path)
 
-def pull(compose_name):
-    subprocess.run(['docker-compose', 'pull'], cwd='/etc/docker' + compose_name)
+    def kill(self):
+        subprocess.run(['docker-compose', 'kill'], cwd=self.path)
 
-def push(compose_name):
-    subprocess.run(['docker-compose', 'push'], cwd='/etc/docker' + compose_name)
+    def pull(self):
+        subprocess.run(['docker-compose', 'pull'], cwd=self.path)
 
-def rm(compose_name):
-    subprocess.run(['docker-compose', 'rm'], cwd='/etc/docker' + compose_name)
+    def push(self):
+        subprocess.run(['docker-compose', 'push'], cwd=self.path)
 
-def top(compose_name):
-    subprocess.run(['docker-compose', 'top'], cwd='/etc/docker' + compose_name)
+    def rm(self):
+        subprocess.run(['docker-compose', 'rm'], cwd=self.path)
 
-def pause(compose_name):
-    subprocess.run(['docker-compose', 'pause'], cwd='/etc/docker' + compose_name)
+    def top(self):
+        subprocess.run(['docker-compose', 'top'], cwd=self.path)
 
-def unpause(compose_name):
-    subprocess.run(['docker-compose', 'unpause'], cwd='/etc/docker' + compose_name)
+    def pause(self):
+        subprocess.run(['docker-compose', 'pause'], cwd=self.path)
 
-def images(compose_name):
-    subprocess.run(['docker-compose', 'images'], cwd='/etc/docker' + compose_name)
+    def unpause(self):
+        subprocess.run(['docker-compose', 'unpause'], cwd=self.path)
 
-def port(compose_name):
-    subprocess.run(['docker-compose', 'port'], cwd='/etc/docker' + compose_name)
+    def images(self):
+        subprocess.run(['docker-compose', 'images'], cwd=self.path)
 
-def logs(compose_name):
-    subprocess.run(['docker-compose', 'logs'], cwd='/etc/docker' + compose_name)
+    def port(self):
+        subprocess.run(['docker-compose', 'port'], cwd=self.path)
 
+    def logs(self):
+        subprocess.run(['docker-compose', 'logs'], cwd=self.path)
 
-def add(compose_name, path):
-    if not path:
-        add(compose_name, os.curdir+"/")
-    elif "docker-compose.yaml" in path:
-        add(compose_name, path.rstrip("docker-compose.yaml"))
-    elif "docker-compose.yml" in path:
-        add(compose_name, path.rstrip("docker-compose.yml"))
-    else:
-        path = path.rstrip("/")
-        os.symlink(path, "/etc/docker/" + compose_name)
+    #Beginning of own commands
+    def add(self):
+        if not self.newpath:
+            Commands(self.compose_name, os.curdir+"/").add
+        elif "docker-compose.yaml" in self.newpath:
+            Commands(self.compose_name, self.newpath.rstrip("docker-compose.yaml")).add
+        elif "docker-compose.yml" in self.newpath:
+            Commands(self.compose_name, self.newpath.rstrip("docker-compose.yml")).add
+        else:
+            self.newpath = self.newpath.rstrip("/")
+            os.symlink(self.newpath, self.path)
 
-
-def remove(compose_name):
-    os.remove("/etc/docker/" + compose_name)
+    def remove(self):
+        os.remove(self.path)
