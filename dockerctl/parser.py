@@ -4,12 +4,12 @@ import sys
 import argparse
 from dockerctl.executer import Commands
 
-version_nr = "0.2"
+VERSION_NR = "0.3"
 
 
 def main(argv):
     parser = argparse.ArgumentParser(prog='dockerctl', add_help=True)
-    parser.add_argument('-v', '--version', action="version", version='dockerctl ' + version_nr,
+    parser.add_argument('-v', '--version', action="version", version='dockerctl ' + VERSION_NR,
                          help="Print version number")
     # common commands
     parser.add_argument('command', choices=['start', 'stop', 'restart', 'ps', 'up', ' kill', 'rm', 'top', 'logs',
