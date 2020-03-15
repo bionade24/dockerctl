@@ -9,7 +9,7 @@ class Commands:
         self.compose_name = compose_name
         self.path = '/etc/docker/' + compose_name
         self.newpath = path
-        print(self.path)
+        self.EDITOR = os.environ.get('EDITOR', 'vi')
 
     def start(self):
         subprocess.run(['docker-compose', 'start'], cwd=self.path)
@@ -70,3 +70,16 @@ class Commands:
 
     def remove(self):
         os.remove(self.path)
+
+    def edit(self):
+        available_files = os.listdir(self.path)
+        filepath = ""
+        if "docker-compose.yml" in available_files and "docker-compose.yaml" in available_files:
+            raise RuntimeError("More than one compose YAML in {0}".format(self.path))
+        elif "docker-compose.yml" in available_files:
+            filepath = os.path.join(self.path, "docker-compose.yml")
+        elif "docker-compose.yaml" in available_files:
+            filepath = os.path.join(self.path, "docker-compose.yaml")
+        else:
+            raise RuntimeError("No docker-compose.y*ml in {0}".format(self.path))
+        subprocess.call([self.EDITOR, filepath])
