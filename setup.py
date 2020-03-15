@@ -27,7 +27,8 @@ setup(
         'Programming Language :: Python :: 3',
         "Operating System :: POSIX :: Linux",
     ],
-    py_modules = ["sys", "argparse", "os", "docker-compose"],
+    py_modules = ["dockerctl"],
+    install_requires = ["sys", "argparse", "os", "docker-compose", "shutil"],
     packages = ["dockerctl"],
     scripts = ["bin/dockerctl"]
 )
