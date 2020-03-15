@@ -39,7 +39,7 @@ class Commands:
 
     def up(self):
         self.checkpath()
-        subprocess.run(['docker-compose', 'up -d'], cwd=self.path)
+        subprocess.run(['docker-compose', 'up', '-d'], cwd=self.path)
 
     def kill(self):
         self.checkpath()
