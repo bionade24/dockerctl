@@ -12,48 +12,63 @@ class Commands:
         self.EDITOR = os.environ.get('EDITOR', 'vi')
 
     def start(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'start'], cwd=self.path)
 
     def stop(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'stop'], cwd=self.path)
 
     def restart(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'restart'], cwd=self.path)
 
     def ps(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'ps'], cwd=self.path)
 
     def up(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'up -d'], cwd=self.path)
 
     def kill(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'kill'], cwd=self.path)
 
     def pull(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'pull'], cwd=self.path)
 
     def push(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'push'], cwd=self.path)
 
     def rm(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'rm'], cwd=self.path)
 
     def top(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'top'], cwd=self.path)
 
     def pause(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'pause'], cwd=self.path)
 
     def unpause(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'unpause'], cwd=self.path)
 
     def images(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'images'], cwd=self.path)
 
     def port(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'port'], cwd=self.path)
 
     def logs(self):
+        self.checkpath()
         subprocess.run(['docker-compose', 'logs'], cwd=self.path)
 
     #Beginning of own commands
@@ -69,9 +84,11 @@ class Commands:
             os.symlink(self.path_arg, self.path)
 
     def remove(self):
+        self.checkpath()
         os.remove(self.path)
 
     def edit(self):
+        self.checkpath()
         available_files = os.listdir(self.path)
         filepath = ""
         if "docker-compose.yml" in available_files and "docker-compose.yaml" in available_files:
@@ -94,3 +111,9 @@ class Commands:
         #TODO:Can I check if it was updated?
         self.pull()
         self.up()
+
+    def checkpath(self):
+        if not os.path.exists(self.path):
+            raise RuntimeError("{0} does not exist".format(self.compose_name))
+        elif not os.path.isdir(self.path):
+            raise RuntimeError("{0} is not a directory".format(self.compose_name))
