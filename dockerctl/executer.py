@@ -13,6 +13,14 @@ class Commands:
         self.path = '/etc/docker/' + compose_name
         self.path_arg = path_arg
 
+    def checkpath(self):
+        if not os.path.exists(self.path):
+            raise RuntimeError("{0} does not exist".format(self.compose_name))
+        elif not os.path.isdir(self.path):
+            raise RuntimeError("{0} is not a directory".format(self.compose_name))
+
+    #Command mapping for docker-compose
+
     def start(self):
         self.checkpath()
         subprocess.run(['docker-compose', 'start'], cwd=self.path)
@@ -119,9 +127,3 @@ class Commands:
         #TODO:Can I check if it was updated?
         self.pull()
         self.up()
-
-    def checkpath(self):
-        if not os.path.exists(self.path):
-            raise RuntimeError("{0} does not exist".format(self.compose_name))
-        elif not os.path.isdir(self.path):
-            raise RuntimeError("{0} is not a directory".format(self.compose_name))
