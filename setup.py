@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name = "dockerctl",
-    version = "0.3",
+    version = "0.3.post1",
     description = "Python Script to steer (multiple) docker-compose-yaml's from everywhere.",
     long_description= long_description,
     url = "https://github.com/bionade24/dockerctl",
@@ -28,7 +28,7 @@ setup(
         "Operating System :: POSIX :: Linux",
     ],
     py_modules = ["dockerctl"],
-    install_requires = ["sys", "argparse", "os", "docker-compose", "shutil"],
+    install_requires = ["argparse", "docker-compose"],
     packages = ["dockerctl"],
     scripts = ["bin/dockerctl"]
 )
