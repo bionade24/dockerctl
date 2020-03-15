@@ -5,11 +5,12 @@ import os
 
 class Commands:
 
+    EDITOR = os.environ.get('EDITOR', 'vi')
+
     def __init__(self, compose_name, path_arg):
         self.compose_name = compose_name
         self.path = '/etc/docker/' + compose_name
         self.path_arg = path_arg
-        self.EDITOR = os.environ.get('EDITOR', 'vi')
 
     def start(self):
         self.checkpath()
