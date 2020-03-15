@@ -59,11 +59,11 @@ class Commands:
     #Beginning of own commands
     def add(self):
         if not self.newpath:
-            Commands(self.compose_name, os.curdir+"/").add
+            Commands(self.compose_name, os.curdir+"/").add()
         elif "docker-compose.yaml" in self.newpath:
-            Commands(self.compose_name, self.newpath.rstrip("docker-compose.yaml")).add
+            Commands(self.compose_name, self.newpath.rstrip("docker-compose.yaml")).add()
         elif "docker-compose.yml" in self.newpath:
-            Commands(self.compose_name, self.newpath.rstrip("docker-compose.yml")).add
+            Commands(self.compose_name, self.newpath.rstrip("docker-compose.yml")).add()
         else:
             self.newpath = self.newpath.rstrip("/")
             os.symlink(self.newpath, self.path)
