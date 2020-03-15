@@ -5,10 +5,10 @@ import os
 
 class Commands:
 
-    def __init__(self, compose_name, path):
+    def __init__(self, compose_name, path_arg):
         self.compose_name = compose_name
         self.path = '/etc/docker/' + compose_name
-        self.newpath = path
+        self.path_arg = path_arg
         self.EDITOR = os.environ.get('EDITOR', 'vi')
 
     def start(self):
@@ -58,15 +58,15 @@ class Commands:
 
     #Beginning of own commands
     def add(self):
-        if not self.newpath:
+        if not self.path_arg:
             Commands(self.compose_name, os.curdir+"/").add()
-        elif "docker-compose.yaml" in self.newpath:
-            Commands(self.compose_name, self.newpath.rstrip("docker-compose.yaml")).add()
-        elif "docker-compose.yml" in self.newpath:
-            Commands(self.compose_name, self.newpath.rstrip("docker-compose.yml")).add()
+        elif "docker-compose.yaml" in self.path_arg:
+            Commands(self.compose_name, self.path_arg.rstrip("docker-compose.yaml")).add()
+        elif "docker-compose.yml" in self.path_arg:
+            Commands(self.compose_name, self.path_arg.rstrip("docker-compose.yml")).add()
         else:
-            self.newpath = self.newpath.rstrip("/")
-            os.symlink(self.newpath, self.path)
+            self.path_arg = self.path_arg.rstrip("/")
+            os.symlink(self.path_arg, self.path)
 
     def remove(self):
         os.remove(self.path)
