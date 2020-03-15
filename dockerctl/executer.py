@@ -1,6 +1,7 @@
 # executes the commands for docker-compose
 import subprocess
 import os
+import shutil
 
 
 class Commands:
@@ -86,7 +87,13 @@ class Commands:
 
     def remove(self):
         self.checkpath()
-        os.remove(self.path)
+        if os.path.islink(self.path):
+            os.remove(self.path)
+            print("Symlink: origin still exists")
+        elif os.path.isdir(self.path):
+            shutil.rmtree(self.path)
+        else:
+            raise RuntimeError("Can't remove: Neither link nor directory")
 
     def edit(self):
         self.checkpath()
