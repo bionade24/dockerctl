@@ -15,7 +15,10 @@ class Commands:
 
     def checkpath(self):
         if not os.path.exists(self.path):
-            raise RuntimeError("{0} does not exist".format(self.compose_name))
+            if os.stat(self.path).st_gid not in os.getresgid():
+                raise RuntimeError("{0} This user doesn't have access".format(self.compose_name))
+            else:
+                raise RuntimeError("{0} does not exist".format(self.compose_name))
         elif not os.path.isdir(self.path):
             raise RuntimeError("{0} is not a directory".format(self.compose_name))
 
