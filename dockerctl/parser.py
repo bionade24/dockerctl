@@ -14,7 +14,7 @@ def main(argv):
     # common commands
     parser.add_argument('command', choices=['start', 'stop', 'restart', 'ps', 'up', ' kill', 'rm', 'top', 'logs',
                                             'images', 'port', 'pull', 'push', 'pause', 'unpause', 'add', 'remove',
-                                            'edit', 'create', 'update'])
+                                            'edit', 'show', 'create', 'update'])
     parser.add_argument('compose_name', type=str)
     # command options
     parser.add_argument('--path', metavar='PATH', type=str, help="Link path to yaml into /etc/docker/name")

@@ -120,6 +120,10 @@ class Commands:
             raise RuntimeError("No docker-compose.y*ml in {0}".format(self.path))
         subprocess.call([self.EDITOR, filepath])
 
+    def show(self):
+        self.EDITOR = 'less'
+        self.edit()
+
     def create(self):
         os.mkdir(self.path)
         with open(os.path.join(self.path, "docker-compose.yaml"), "w") as fobj:
