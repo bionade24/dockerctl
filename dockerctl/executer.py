@@ -8,10 +8,11 @@ class Commands:
 
     EDITOR = os.environ.get('EDITOR', 'vi')
 
-    def __init__(self, compose_name, path_arg):
+    def __init__(self, compose_name, path_arg, append=None):
         self.compose_name = compose_name
         self.path = '/etc/docker/' + compose_name
         self.path_arg = path_arg
+        self.append = append
 
     def checkpath(self):
         if not os.path.exists(self.path):
@@ -83,6 +84,23 @@ class Commands:
     def logs(self):
         self.checkpath()
         subprocess.run(['docker-compose', 'logs'], cwd=self.path)
+
+    def exec(self):
+        self.checkpath()
+        get_service_list = subprocess.Popen(['docker-compose', 'config', '--services'],
+        cwd=self.path, stdout=subprocess.PIPE).communicate()
+        service_list = get_service_list[0].split(b'\n')
+        service_list.remove(b'') #Removing last element of list because it' empty
+        outline = "Which service do you want to choose?: \n"
+        i = 1
+        for service in service_list:
+            outline += "{}: {}\n".format(i, service.decode("utf-8"))
+            i += 1
+        print(outline)
+        serv_nr = int(input("Enter number of container: ")) - 1
+        if not self.append:
+            self.append = input("Command to execute: ")
+        subprocess.run(['docker-compose', 'exec', service_list[serv_nr], self.append], cwd=self.path)
 
     #Beginning of own commands
     def add(self):

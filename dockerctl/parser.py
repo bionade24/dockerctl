@@ -14,13 +14,14 @@ def main(argv):
     # common commands
     parser.add_argument('command', choices=['start', 'stop', 'restart', 'ps', 'up', ' kill', 'rm', 'top', 'logs',
                                             'images', 'port', 'pull', 'push', 'pause', 'unpause', 'add', 'remove',
-                                            'edit', 'show', 'create', 'update'])
+                                            'exec', 'edit', 'show', 'create', 'update'])
     parser.add_argument('compose_name', type=str)
     # command options
+    parser.add_argument('-a', '--append', metavar='ARGS', type=str, help="Pass other flags and args to docker-compose")
     parser.add_argument('--path', metavar='PATH', type=str, help="Link path to yaml into /etc/docker/name")
 
     args = parser.parse_args(argv)
-    getattr(Commands(args.compose_name, args.path), args.command)()
+    getattr(Commands(args.compose_name, args.path, args.append), args.command)()
 
 
 if __name__ == '__main__':
