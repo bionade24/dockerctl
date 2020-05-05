@@ -6,9 +6,10 @@ import shutil
 
 class Base__funcs:
 
-    def __init__(self, path, compose_name):
+    def __init__(self, path, compose_name, append):
         self.path = path
         self.compose_name = compose_name
+        self.append = append
 
     def checkpath(self):
         if not os.path.exists(self.path):
@@ -21,7 +22,10 @@ class Base__funcs:
 
     def map_cmd(self, cmd):
         self.checkpath()
-        subprocess.run(['docker-compose', cmd], cwd=self.path)
+        if len(self.append) == 0:
+            subprocess.run(['docker-compose', cmd], cwd=self.path)
+        else:
+            subprocess.run(['docker-compose', cmd] + self.append, cwd=self.path)
 
 
 class Commands(Base__funcs):
@@ -33,7 +37,7 @@ class Commands(Base__funcs):
         self.path = '/etc/docker/' + compose_name
         self.path_arg = path_arg
         self.append = append
-        super.__init__(self.path, self.compose_name)
+        super().__init__(self.path, self.compose_name, self.append)
 
     #Command mapping for docker-compose
 
@@ -98,7 +102,7 @@ class Commands(Base__funcs):
         serv_nr = int(input("Enter number of container: ")) - 1
         if not self.append:
             self.append = input("Command to execute: ")
-        subprocess.run(['docker-compose', 'exec', service_list[serv_nr], self.append], cwd=self.path)
+        subprocess.run(['docker-compose', 'exec', service_list[serv_nr]] + self.append, cwd=self.path)
 
     #Beginning of own commands
     def add(self):

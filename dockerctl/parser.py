@@ -16,12 +16,23 @@ def main(argv):
                                             'images', 'port', 'pull', 'push', 'pause', 'unpause', 'add', 'remove',
                                             'exec', 'edit', 'show', 'create', 'update'])
     parser.add_argument('compose_name', type=str)
+    parser.add_argument('additional args passed to compose comand', action='store_true', default=None)
     # command options
-    parser.add_argument('-a', '--append', metavar='ARGS', type=str, help="Pass other flags and args to docker-compose")
     parser.add_argument('--path', metavar='PATH', type=str, help="Link path to yaml into /etc/docker/name")
 
-    args = parser.parse_args(argv)
-    getattr(Commands(args.compose_name, args.path, args.append), args.command)()
+    argvlen = len(argv)
+    narg = argvlen
+    if argvlen > 2:
+        if '-v' in argv or '--verbose' in argv:
+            if argvlen > 3:
+                narg = 3
+        elif '--path' in argv:
+            if argvlen > 4:
+                narg = 4
+        else:
+            narg = 2
+    args = parser.parse_args(argv[:narg])
+    getattr(Commands(args.compose_name, args.path, argv[narg:]), args.command)()
 
 
 if __name__ == '__main__':
