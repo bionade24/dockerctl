@@ -4,7 +4,7 @@ import sys
 import argparse
 from dockerctl.executer import Commands
 
-VERSION_NR = "0.3"
+VERSION_NR = "0.4"
 
 
 def main(argv):
