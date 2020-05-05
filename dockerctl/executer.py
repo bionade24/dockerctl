@@ -101,7 +101,8 @@ class Commands(Base__funcs):
         print(outline)
         serv_nr = int(input("Enter number of container: ")) - 1
         if not self.append:
-            self.append = list(input("Command to execute: "))
+            self.append = input("Command to execute: ").split("\n")
+            print(self.append)
         subprocess.run(['docker-compose', 'exec', service_list[serv_nr]] + self.append, cwd=self.path)
 
     #Beginning of own commands
