@@ -4,15 +4,11 @@ import os
 import shutil
 
 
-class Commands:
+class Base__funcs:
 
-    EDITOR = os.environ.get('EDITOR', 'vi')
-
-    def __init__(self, compose_name, path_arg, append=None):
+    def __init__(self, path, compose_name):
+        self.path = path
         self.compose_name = compose_name
-        self.path = '/etc/docker/' + compose_name
-        self.path_arg = path_arg
-        self.append = append
 
     def checkpath(self):
         if not os.path.exists(self.path):
@@ -23,67 +19,69 @@ class Commands:
         elif not os.path.isdir(self.path):
             raise RuntimeError("{0} is not a directory".format(self.compose_name))
 
+    def map_cmd(self, cmd):
+        self.checkpath()
+        subprocess.run(['docker-compose', cmd], cwd=self.path)
+
+
+class Commands(Base__funcs):
+
+    EDITOR = os.environ.get('EDITOR', 'vi')
+
+    def __init__(self, compose_name, path_arg, append=None):
+        self.compose_name = compose_name
+        self.path = '/etc/docker/' + compose_name
+        self.path_arg = path_arg
+        self.append = append
+        super.__init__(self.path, self.compose_name)
+
     #Command mapping for docker-compose
 
     def start(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'start'], cwd=self.path)
+        self.map_cmd("start")
 
     def stop(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'stop'], cwd=self.path)
+        self.map_cmd("stop")
 
     def restart(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'restart'], cwd=self.path)
+        self.map_cmd("restart")
 
     def ps(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'ps'], cwd=self.path)
+        self.map_cmd("ps")
 
     def up(self):
         self.checkpath()
         subprocess.run(['docker-compose', 'up', '-d'], cwd=self.path)
 
     def kill(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'kill'], cwd=self.path)
+        self.map_cmd("kill")
 
     def pull(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'pull'], cwd=self.path)
+        self.map_cmd("pull")
 
     def push(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'push'], cwd=self.path)
+        self.map_cmd("push")
 
     def rm(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'rm'], cwd=self.path)
+        self.map_cmd("rm")
 
     def top(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'top'], cwd=self.path)
+        self.map_cmd("top")
 
     def pause(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'pause'], cwd=self.path)
+        self.map_cmd("pause")
 
     def unpause(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'unpause'], cwd=self.path)
+        self.map_cmd("unpause")
 
     def images(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'images'], cwd=self.path)
+        self.map_cmd("images")
 
     def port(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'port'], cwd=self.path)
+        self.map_cmd("port")
 
     def logs(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'logs'], cwd=self.path)
+        self.map_cmd("logs")
 
     def exec(self):
         self.checkpath()
