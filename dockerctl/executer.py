@@ -107,7 +107,7 @@ class Commands(Base__funcs):
     #Beginning of own commands
     def add(self):
         if not self.path_arg:
-            Commands(self.compose_name, os.curdir+"/").add()
+            Commands(self.compose_name, os.getcwd()+"/").add()
         elif "docker-compose.yaml" in self.path_arg:
             Commands(self.compose_name, self.path_arg.rstrip("docker-compose.yaml")).add()
         elif "docker-compose.yml" in self.path_arg:
