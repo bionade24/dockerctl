@@ -9,6 +9,7 @@ setup(
     version = "0.5",
     description = "Python Script to steer (multiple) docker-compose-yaml's from everywhere.",
     long_description= long_description,
+    long_description_content_type="text/markdown",
     url = "https://github.com/bionade24/dockerctl",
     author = "Oskar Roesler (bionade24)",
     author_email = "o.roesler@oscloud.info",
