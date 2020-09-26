@@ -3,6 +3,7 @@ import subprocess
 import os
 import shutil
 import shlex
+import glob
 
 
 class Base__funcs:
@@ -160,3 +161,9 @@ class Commands(Base__funcs):
         #TODO:Can I check if it was updated?
         self.pull()
         self.up()
+
+    @staticmethod
+    def ls():
+        services_paths = glob.glob('/etc/docker/*/docker-compose.y*')
+        for service in services_paths:
+            print(service.split('/')[3])
