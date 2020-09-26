@@ -3,14 +3,17 @@
 import sys
 import argparse
 from dockerctl.executer import Commands
+from dockerctl.actions import ShowText
+from dockerctl import help_page
 
 VERSION_NR = "0.4"
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(prog='dockerctl', add_help=True)
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-v', '--version', action="version", version='dockerctl ' + VERSION_NR,
                          help="Print version number")
+    parser.add_argument('-h', '--help', action=ShowText, text=help_page.explanation)
     # common commands
     parser.add_argument('command', choices=['start', 'stop', 'restart', 'ps', 'up', ' kill', 'rm', 'top', 'logs',
                                             'images', 'port', 'pull', 'push', 'pause', 'unpause', 'add', 'remove',

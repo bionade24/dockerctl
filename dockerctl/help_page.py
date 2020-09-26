@@ -1,8 +1,6 @@
-
-
-def show():
-    explanation = '''
+explanation = '''
 usage: dockerctl [-h] [-v] [--path PATH] COMMAND COMPOSE_NAME [extra ARGS passed to docker-compose]
+
              start: Start the composition
              stop: Stop the composition
              restart: Restart it.
@@ -18,7 +16,7 @@ usage: dockerctl [-h] [-v] [--path PATH] COMMAND COMPOSE_NAME [extra ARGS passed
              push: Push built images of the composition.
              pause: Pause all services in the composition.
              unpause: Unpause them.
-             add: Links the current dir to a folder with the compose_name under /etc/docker. 
+             add: Links the current dir to a folder with the compose_name under /etc/docker.
                 Use --path to link an other path than curdir.
              remove: Removes composition folder or link under /etc/docker
              exec: Exec something in a service of a container. [ARGS] can optionally be used to write the command.
@@ -27,4 +25,3 @@ usage: dockerctl [-h] [-v] [--path PATH] COMMAND COMPOSE_NAME [extra ARGS passed
              create: Create dir with compos_name under /etc/docker
              update: Runs pull and up in one command to update a composition.
     '''
-    print(explanation)
