@@ -26,10 +26,7 @@ def main(argv):
     argvlen = len(argv)
     narg = argvlen
     if argvlen > 2:
-        if '-v' in argv or '--version' in argv or '-h' in argv or '--help' in argv:
-            if argvlen > 3:
-                narg = 3
-        elif '--path' in argv:
+        if '--path' in argv:
             if argvlen > 4:
                 narg = 4
         else:
