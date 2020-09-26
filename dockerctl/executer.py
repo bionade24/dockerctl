@@ -2,6 +2,8 @@
 import subprocess
 import os
 import shutil
+import shlex
+import glob
 
 
 class Base__funcs:
@@ -99,15 +101,20 @@ class Commands(Base__funcs):
             outline += "{}: {}\n".format(i, service.decode("utf-8"))
             i += 1
         print(outline)
-        serv_nr = int(input("Enter number of container: ")) - 1
+        nr_input = input("Enter number of container: ")
+        if nr_input == '':
+            RuntimeError("Please specify a container from the list, e.g. 1")
+        serv_nr = int(nr_input)
         if not self.append:
-            self.append = input("Command to execute: ").split(" ")
-        subprocess.run(['docker-compose', 'exec', service_list[serv_nr]] + self.append, cwd=self.path)
+            self.append = shlex.split(input("Command to execute: "))
+        if serv_nr > len(service_list) or serv_nr < 2:
+            RuntimeError("Specified index doesn't match to a container in that service!")
+        subprocess.run(['docker-compose', 'exec', service_list[serv_nr - 1]] + self.append, cwd=self.path)
 
     #Beginning of own commands
     def add(self):
         if not self.path_arg:
-            Commands(self.compose_name, os.curdir+"/").add()
+            Commands(self.compose_name, os.getcwd()+"/").add()
         elif "docker-compose.yaml" in self.path_arg:
             Commands(self.compose_name, self.path_arg.rstrip("docker-compose.yaml")).add()
         elif "docker-compose.yml" in self.path_arg:
@@ -154,3 +161,9 @@ class Commands(Base__funcs):
         #TODO:Can I check if it was updated?
         self.pull()
         self.up()
+
+    @staticmethod
+    def ls():
+        services_paths = glob.glob('/etc/docker/*/docker-compose.y*')
+        for service in services_paths:
+            print(service.split('/')[3])
