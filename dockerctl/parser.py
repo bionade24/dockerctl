@@ -19,7 +19,7 @@ def main(argv):
                                             'images', 'port', 'pull', 'push', 'pause', 'unpause', 'add', 'remove',
                                             'exec', 'edit', 'show', 'create', 'update'])
     parser.add_argument('compose_name', type=str)
-    parser.add_argument('additional args passed to compose comand', action='store_true', default=None)
+    parser.add_argument('additional args passed to compose command', action='store_true', default=None)
     # command options
     parser.add_argument('--path', metavar='PATH', type=str, help="Link path to yaml into /etc/docker/name")
 
