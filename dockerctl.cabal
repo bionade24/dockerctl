@@ -1,0 +1,56 @@
+cabal-version:      2.4
+
+name:               dockerctl
+version:            0.6.0
+
+-- A short (one-line) description of the package.
+-- synopsis:
+
+-- A longer description of the package.
+-- description:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+
+-- The license under which the package is released.
+-- license:
+author:             Oskar Roesler
+maintainer:          Oskar Roesler <oskar AT oskar MINUS roesler DOT de>
+category:            Command Line
+extra-doc-files:
+  README.md
+
+common common-settings
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+
+library
+  import: common-settings
+  hs-source-dirs: src
+  build-depends:
+      base
+    , bytestring
+    , directory
+    , filepath
+    , unix
+    , utf8-string
+  exposed-modules:
+    Dockerctl
+  -- other-modules:
+
+executable histcleaner
+  import: common-settings
+  hs-source-dirs: app
+  main-is: Main.hs
+  other-modules:
+    OptParse
+  build-depends:
+      base
+    , bytestring
+    , directory
+    , filepath
+    , optparse-applicative
+    , dockerctl
+  ghc-options:
+    -O
