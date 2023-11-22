@@ -1,16 +1,12 @@
 # dockerctl
 
-Python Script to steer docker-compose-yaml's from everywhere.
+Script to steer docker-compose-yaml's from everywhere.
 
+The python implementation is depectated and unmaintained.
 https://pypi.org/project/dockerctl/
 
 Installation:
 ==
-
-Installation from PyPi: `pip install dockerctl`  
-Manual installation: Type `pip install .` in the project's directory  
-  
-*Be aware that you have to call python3 pip, so if you're on an distro that defaults to py2, use* `python3 -m pip`
 
 This program is released under the GPLv3. See "LICENSE" for further information.
 
