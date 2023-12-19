@@ -16,13 +16,13 @@ def exec [compose_path: path, cmds?: string] {
   print "Which service do you want to choose?: \n"
   print $services
   # TODO: Try input list for interactive selection
-  let service_nr = input --numchar 2 "Enter the number of the service: " | into int
+  let service_nr = (input --numchar 2 "Enter the number of the service: " | into int)
   if $service_nr < 1 or $service_nr > ($services | length) {
-    print "Error: Specified index doesn't match to a container in that service!"
+    print -e "Error: Specified index doesn't match to a container in that service!"
     exit 1 # TODO: Re-ask & try
   }
   if not cmds {
-    let cmds = input("Command to execute: ")
+    let cmds = (input "Command to execute: ")
   }
   ^$COMPOSE_BIN exec $services.$service_nr $cmds
 }
@@ -50,15 +50,15 @@ def edit [compose_path: path, show: bool = true] {
   let compose_yamls = ls ($compose_path + "docker-compose.y*ml")
   if (compose_yamls | length) != 1 {
     if (compose_name | length) > 1 {
-      print "Error: Too many compose yamls in directory" $compose_yamls
+      print -e "Error: Too many compose yamls in directory" $compose_yamls
     } else {
-      print "Error: No docker-compose.y(a)ml in " + $compose_path + " found"
+      print -e "Error: No docker-compose.y(a)ml in " + $compose_path + " found"
     }
     exit 1
   }
   mut editor = vi
   if not $show {
-    editor = less
+    editor = "less"
   } else {
     editor = $env.VISUAL
     editor = $env.EDITOR
@@ -77,9 +77,8 @@ def create [compose_path: path] {
 }
 
 def update [] {
-  #TODO
-  #pull
-  #up
+  ^$COMPOSE_BIN pull
+  ^$COMPOSE_BIN up -d
 }
 
 def --env main [
@@ -98,7 +97,7 @@ def --env main [
     try {
       mkdir $DOCKERCTL_PATH
     } catch {
-      print ("Could not create dockerctl config path under: " + $DOCKERCTL_PATH)
+      print -e ("Could not create dockerctl config path under: " + $DOCKERCTL_PATH)
     }
   }
   let compose_path = do {
