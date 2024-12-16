@@ -1,0 +1,27 @@
+#!/usr/bin/env -S dunesh
+
+
+let DOCKERCTL_PATH = "/etc/dockerctl";
+let COMPOSE_BIN = 'docker-compose;
+
+
+let pass_cmds = [
+"start", "stop", "restart", "ps", "up", "kill", "pull", "push", "rm", "pause", "unpause", "images", "port", "logs"
+];
+
+#FIXME: Dictionairy hack
+let deviate_cmds = insert {{}} "up" "up -d";
+
+
+let exec = compose_path, cmds -> {
+    std@assert fs@exists compose_path;
+    cd compose_path
+    let services = lines ( COMPOSE_BIN config --services );
+
+    println "Which service do you want to choose?: \n";
+    println services;
+    let service_nr = (int ( input "Enter the number of the service: "));
+    if service_nr < 1 or service_nr > (len services);
+        println "Error: Specified index doesn't match to a container in that service!";
+        exit 1; # TODO: Re-ask & try
+    
