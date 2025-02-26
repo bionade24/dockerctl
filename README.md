@@ -23,6 +23,7 @@ usage: dockerctl [-h] [-v] [-l] [--list] [--path PATH] COMMAND COMPOSE_NAME [ext
                  restart: Restart it.
                  ps: Show processes of services in composition.
                  up: Calls docker-compose up -d, composition runs as daemon afterwards.
+                 down: Calls docker-compose down, composition gets stopped and deleted.
                  kill: Kill the whole composition, if you don't pass extra args.
                  rm: Removes all volumes created by the compose yaml.
                  top: Get information about the processes in the services.

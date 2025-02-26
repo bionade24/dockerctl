@@ -6,6 +6,12 @@ import shlex
 import glob
 
 
+DOCKER_COMPOSE_CMD = ["docker", "compose"]
+DOCKER_COMPOSE_CMD_OLD =  ["docker-compose",]
+DOCKERCTL_DIR = "/etc/dockerctl/"
+DOCKERCTL_DIR_OLD = "/etc/docker/"
+
+
 class Base__funcs:
 
     def __init__(self, path, compose_name, append):
@@ -25,76 +31,50 @@ class Base__funcs:
     def map_cmd(self, cmd):
         self.checkpath()
         if len(self.append) == 0:
-            subprocess.run(['docker-compose', cmd], cwd=self.path)
+            subprocess.run(DOCKER_COMPOSE_CMD + shlex.split(cmd), cwd=self.path)
         else:
-            subprocess.run(['docker-compose', cmd] + self.append, cwd=self.path)
+            subprocess.run(DOCKER_COMPOSE_CMD + shlex.split(cmd + self.append), cwd=self.path)
 
 
 class Commands(Base__funcs):
 
     EDITOR = os.environ.get('EDITOR', 'vi')
+    PASSTROUGH_CMDS = ["start", "stop", "restart", "ps", "down", "kill", "pull", "push", "rm", "pause", "unpause", "images", "port", "logs"]
+    DEVIATE_CMDS = {"up": "up -d"}
 
     def __init__(self, compose_name, path_arg, append=None):
+        global DOCKER_COMPOSE_CMD
         self.compose_name = compose_name
-        self.path = '/etc/docker/' + compose_name
+        self.path = os.path.join(DOCKERCTL_DIR, compose_name)
+        if not os.path.exists(self.path):
+            old_path = os.path.join(DOCKERCTL_DIR_OLD, compose_name)
+            self.path = old_path if os.path.exists(old_path) else self.path
+            if not os.path.exists(DOCKERCTL_DIR):
+                os.mkdir(DOCKERCTL_DIR)
         self.path_arg = path_arg
         self.append = append
+        output = subprocess.run(DOCKER_COMPOSE_CMD, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL)
+        if 1 == output.returncode:
+            DOCKER_COMPOSE_CMD = DOCKER_COMPOSE_CMD_OLD
         super().__init__(self.path, self.compose_name, self.append)
 
-    #Command mapping for docker-compose
-
-    def start(self):
-        self.map_cmd("start")
-
-    def stop(self):
-        self.map_cmd("stop")
-
-    def restart(self):
-        self.map_cmd("restart")
-
-    def ps(self):
-        self.map_cmd("ps")
-
-    def up(self):
-        self.checkpath()
-        subprocess.run(['docker-compose', 'up', '-d'], cwd=self.path)
-
-    def kill(self):
-        self.map_cmd("kill")
-
-    def pull(self):
-        self.map_cmd("pull")
-
-    def push(self):
-        self.map_cmd("push")
-
-    def rm(self):
-        self.map_cmd("rm")
-
-    def top(self):
-        self.map_cmd("top")
-
-    def pause(self):
-        self.map_cmd("pause")
-
-    def unpause(self):
-        self.map_cmd("unpause")
-
-    def images(self):
-        self.map_cmd("images")
-
-    def port(self):
-        self.map_cmd("port")
-
-    def logs(self):
-        self.map_cmd("logs")
+    def exec_cmd(self, compose_cmd):
+        if compose_cmd in self.PASSTROUGH_CMDS:
+            self.map_cmd(compose_cmd)
+        elif compose_cmd in self.DEVIATE_CMDS.keys():
+            self.map_cmd(self.DEVIATE_CMDS[compose_cmd])
+        elif hasattr(self, compose_cmd):
+            getattr(self, compose_cmd)()
+        else:
+            raise RuntimeError("Unsupported dockerctl cmd: " + compose_cmd)
 
     def exec(self):
         self.checkpath()
-        get_service_list = subprocess.Popen(['docker-compose', 'config', '--services'],
+        get_service_list = subprocess.Popen(DOCKER_COMPOSE_CMD + ['config', '--services'],
         cwd=self.path, stdout=subprocess.PIPE).communicate()
         service_list = get_service_list[0].split(b'\n')
-        service_list.remove(b'') #Removing last element of list because it' empty
+        service_list.remove(b'') # Removing last element of list because it' empty
         outline = "Which service do you want to choose?: \n"
         i = 1
         for service in service_list:
@@ -108,10 +88,11 @@ class Commands(Base__funcs):
         if not self.append:
             self.append = shlex.split(input("Command to execute: "))
         if serv_nr > len(service_list) or serv_nr < 2:
-            RuntimeError("Specified index doesn't match to a container in that service!")
-        subprocess.run(['docker-compose', 'exec', service_list[serv_nr - 1]] + self.append, cwd=self.path)
+            RuntimeError(
+                    "Specified index doesn't match to a container in that service!")
+        subprocess.run(DOCKER_COMPOSE_CMD + ['exec', service_list[serv_nr - 1]] + self.append, cwd=self.path)
 
-    #Beginning of own commands
+    # Beginning of own commands
     def add(self):
         if not self.path_arg:
             Commands(self.compose_name, os.getcwd()+"/").add()
@@ -121,7 +102,7 @@ class Commands(Base__funcs):
             Commands(self.compose_name, self.path_arg.rstrip("docker-compose.yml")).add()
         else:
             self.path_arg = self.path_arg.rstrip("/")
-            os.symlink(self.path_arg, self.path)
+            os.symlink(self.path_arg, self.path), 'ls'
 
     def remove(self):
         self.checkpath()
@@ -158,12 +139,12 @@ class Commands(Base__funcs):
         self.edit()
 
     def update(self):
-        #TODO:Can I check if it was updated?
-        self.pull()
-        self.up()
+        # TODO:Can I check if it was updated?
+        self.exec_cmd("pull")
+        self.exec_cmd("up")
 
     @staticmethod
     def ls():
-        services_paths = glob.glob('/etc/docker/*/docker-compose.y*')
+        services_paths = glob.glob(DOCKERCTL_DIR + '*/docker-compose.y*')
         for service in services_paths:
             print(service.split('/')[3])

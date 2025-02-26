@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name = "dockerctl",
-    version = "0.5",
+    version = "1.0",
     description = "Python Script to steer (multiple) docker-compose-yaml's from everywhere.",
     long_description= long_description,
     long_description_content_type="text/markdown",
@@ -19,7 +19,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         # Pick your license as you wish
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
 
@@ -29,7 +29,7 @@ setup(
         "Operating System :: POSIX :: Linux",
     ],
     py_modules = ["dockerctl"],
-    install_requires = ["argparse", "docker-compose"],
+    install_requires = ["argparse",],
     packages = ["dockerctl"],
     scripts = ["bin/dockerctl"]
 )

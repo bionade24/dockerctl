@@ -7,3 +7,4 @@ parser_args.py
 dist/
 dockerctl.egg-info/
 build/
+*.whl

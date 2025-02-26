@@ -1,5 +1,5 @@
 import argparse
-from dockerctl.executer import Commands
+from dockerctl.executor import Commands
 
 
 class ShowText(argparse.Action):
