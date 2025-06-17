@@ -6,7 +6,7 @@ from dockerctl.executor import Commands
 from dockerctl import actions
 from dockerctl import help_page
 
-VERSION_NR = "1.0"
+VERSION_NR = "1.1"
 
 
 def main(argv):
