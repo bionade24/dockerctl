@@ -33,7 +33,7 @@ class Base__funcs:
         if len(self.append) == 0:
             subprocess.run(DOCKER_COMPOSE_CMD + shlex.split(cmd), cwd=self.path)
         else:
-            subprocess.run(DOCKER_COMPOSE_CMD + shlex.split(cmd + self.append), cwd=self.path)
+            subprocess.run(DOCKER_COMPOSE_CMD + shlex.split(cmd + " " + " ".join(self.append)), cwd=self.path)
 
 
 class Commands(Base__funcs):
