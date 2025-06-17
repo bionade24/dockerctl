@@ -35,7 +35,6 @@ def main(argv):
     args = parser.parse_args(argv[:narg])
     cmd_executor = Commands(args.compose_name, args.path, argv[narg:])
     cmd_executor.exec_cmd(args.command)
-    getattr(cmd_executor, args.command)()
 
 
 if __name__ == '__main__':
