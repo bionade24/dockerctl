@@ -29,7 +29,7 @@ setup(
         "Operating System :: POSIX :: Linux",
     ],
     py_modules = ["dockerctl"],
-    install_requires = ["argparse",],
+    install_requires = [],
     packages = ["dockerctl"],
     scripts = ["bin/dockerctl"]
 )
