@@ -1,40 +1,51 @@
 # Parsing of the command options for this program
 
 import sys
-import argparse
+import getopt
 from dockerctl.executor import Commands
-from dockerctl import actions
 from dockerctl import help_page
 
 VERSION_NR = "1.1"
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('-v', '--version', action="version", version='dockerctl ' + VERSION_NR,
-                         help="Print version number")
-    parser.add_argument('-h', '--help', action=actions.ShowText, text=help_page.explanation)
-    parser.add_argument('-l', '--list', action=actions.ListServices)
-    # common commands
-    parser.add_argument('command', choices=['start', 'stop', 'restart', 'ps', 'up', ' kill', 'rm', 'top', 'logs',
-                                            'images', 'port', 'pull', 'push', 'pause', 'unpause', 'add', 'remove',
-                                            'exec', 'edit', 'show', 'create', 'update', 'ls'])
-    parser.add_argument('compose_name', type=str)
-    parser.add_argument('additional args passed to compose command', action='store_true', default=None)
-    # command options
-    parser.add_argument('--path', metavar='PATH', type=str, help="Link path to yaml into /etc/dockerctl/name")
+    path_arg = None
 
-    argvlen = len(argv)
-    narg = argvlen
-    if argvlen > 2:
-        if '--path' in argv:
-            if argvlen > 4:
-                narg = 4
-        else:
-            narg = 2
-    args = parser.parse_args(argv[:narg])
-    cmd_executor = Commands(args.compose_name, args.path, argv[narg:])
-    cmd_executor.exec_cmd(args.command)
+    # Parse command-line options using getopt
+    # Short options: -v (version), -h (help), -l (list)
+    # Long options: --version, --help, --list, --path=PATH
+    try:
+        opts, args = getopt.getopt(argv, 'vhl', ['version', 'help', 'list', 'path='])
+    except getopt.GetoptError as e:
+        print("Error: {}".format(str(e)), file=sys.stderr)
+        sys.exit(1)
+
+    # Process options
+    for opt, arg in opts:
+        if opt in ('-v', '--version'):
+            print('dockerctl ' + VERSION_NR)
+            sys.exit(0)
+        elif opt in ('-h', '--help'):
+            print(help_page.explanation)
+            sys.exit(0)
+        elif opt in ('-l', '--list'):
+            Commands.ls()
+            sys.exit(0)
+        elif opt == '--path':
+            path_arg = arg
+
+    # Parse positional arguments
+    if len(args) < 2:
+        print("Error: Missing required arguments COMMAND and COMPOSE_NAME", file=sys.stderr)
+        sys.exit(1)
+
+    command = args[0]
+    compose_name = args[1]
+    additional_args = args[2:] if len(args) > 2 else []
+
+    # Create executor and run command
+    cmd_executor = Commands(compose_name, path_arg, additional_args)
+    cmd_executor.exec_cmd(command)
 
 
 if __name__ == '__main__':

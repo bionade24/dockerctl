@@ -18,7 +18,7 @@ usage: dockerctl [-h] [-v] [-l] [--list] [--path PATH] COMMAND COMPOSE_NAME [ext
              pause: Pause all services in the composition.
              unpause: Unpause them.
              add: Links the current dir to a folder with the compose_name under /etc/docker.
-                Use [--path] to link an other path than curdir.
+                Use [--path] to symlink another path than curdir.
              remove: Removes composition folder or link under /etc/docker
              exec: Exec something in a service of a container. [ARGS] can optionally be used to write the command.
              edit: Edit the docker-compose.yml. Uses the EDITOR env var.
