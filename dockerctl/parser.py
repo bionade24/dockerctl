@@ -17,7 +17,8 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'vhl', ['version', 'help', 'list', 'path='])
     except getopt.GetoptError as e:
-        print("Error: {}".format(str(e)), file=sys.stderr)
+        print("Error: Invalid option - {}".format(str(e)), file=sys.stderr)
+        print("\nUse 'dockerctl --help' for usage information.", file=sys.stderr)
         sys.exit(1)
 
     # Process options
@@ -35,8 +36,17 @@ def main(argv):
             path_arg = arg
 
     # Parse positional arguments
-    if len(args) < 2:
-        print("Error: Missing required arguments COMMAND and COMPOSE_NAME", file=sys.stderr)
+    if len(args) == 0:
+        print("Error: Missing required COMMAND argument", file=sys.stderr)
+        print("\nUsage: dockerctl [OPTIONS] COMMAND COMPOSE_NAME [ARGS]", file=sys.stderr)
+        print("Use 'dockerctl --help' for detailed usage information.", file=sys.stderr)
+        sys.exit(1)
+    elif len(args) == 1:
+        print("Error: Missing required COMPOSE_NAME argument", file=sys.stderr)
+        print("\nUsage: dockerctl [OPTIONS] {} COMPOSE_NAME [ARGS]".format(args[0]), file=sys.stderr)
+        print("\nCOMMAND: The docker-compose command to execute (e.g., start, stop, logs)", file=sys.stderr)
+        print("COMPOSE_NAME: Name of the compose service in /etc/dockerctl/", file=sys.stderr)
+        print("Use 'dockerctl --help' for more information.", file=sys.stderr)
         sys.exit(1)
 
     command = args[0]
