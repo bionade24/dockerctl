@@ -19,7 +19,7 @@ class Base__funcs:
         self.compose_name = compose_name
         self.append = append
 
-    def checkpath(self):
+    def checkpath(self, check_compose_yml=False):
         if not os.path.exists(self.path):
             raise RuntimeError(
                 "Composition '{0}' not found.\n"
@@ -30,9 +30,13 @@ class Base__funcs:
             raise RuntimeError(
                 "Composition path '{0}' exists but is not a directory.\n"
                 "Expected: {1}".format(self.compose_name, self.path))
+        if check_compose_yml and not (os.path.exists(os.path.join(self.path, "docker-compose.yml")) or \
+            os.path.exists(os.path.join(self.path, "docker-compose.yaml"))):
+            raise RuntimeError(
+                "No docker-compose.yml or docker-compose.yaml found in '{0}'.".format(self.path))
 
     def map_cmd(self, cmd):
-        self.checkpath()
+        self.checkpath(check_compose_yml=True)
         if len(self.append) == 0:
             subprocess.run(DOCKER_COMPOSE_CMD + shlex.split(cmd), cwd=self.path)
         else:
