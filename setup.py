@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name = "dockerctl",
-    version = "1.1",
+    version = "1.2",
     description = "Python Script to steer (multiple) docker-compose-yaml's from everywhere.",
     long_description= long_description,
     long_description_content_type="text/markdown",
