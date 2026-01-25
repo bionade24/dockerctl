@@ -21,9 +21,15 @@ class Base__funcs:
 
     def checkpath(self):
         if not os.path.exists(self.path):
-            raise RuntimeError("{0} does not exist".format(self.compose_name))
+            raise RuntimeError(
+                "Composition '{0}' not found.\n"
+                "Looked in: {1}\n"
+                "Available compositions can be listed with 'dockerctl --list'".format(
+                    self.compose_name, self.path))
         elif not os.path.isdir(self.path):
-            raise RuntimeError("{0} is not a directory".format(self.compose_name))
+            raise RuntimeError(
+                "Composition path '{0}' exists but is not a directory.\n"
+                "Expected: {1}".format(self.compose_name, self.path))
 
     def map_cmd(self, cmd):
         self.checkpath()
@@ -64,7 +70,13 @@ class Commands(Base__funcs):
         elif hasattr(self, compose_cmd):
             getattr(self, compose_cmd)()
         else:
-            raise RuntimeError("Unsupported dockerctl cmd: " + compose_cmd)
+            supported_cmds = (self.PASSTROUGH_CMDS + list(self.DEVIATE_CMDS.keys()) + 
+                            [attr for attr in dir(self) if not attr.startswith('_') and callable(getattr(self, attr))])
+            raise RuntimeError(
+                "Unknown command '{0}'.\n"
+                "Supported commands: {1}\n"
+                "Use 'dockerctl --help' for more information.".format(
+                    compose_cmd, ', '.join(sorted(set(supported_cmds)))))
 
     def exec(self):
         self.checkpath()
@@ -80,13 +92,20 @@ class Commands(Base__funcs):
         print(outline)
         nr_input = input("Enter number of container: ")
         if nr_input == '':
-            RuntimeError("Please specify a container from the list, e.g. 1")
-        serv_nr = int(nr_input)
+            raise RuntimeError("Error: No container selection provided.\nPlease specify a container number from the list (e.g., 1)")
+        try:
+            serv_nr = int(nr_input)
+        except ValueError:
+            raise RuntimeError(
+                "Error: Invalid container selection '{0}'.\n"
+                "Please enter a valid number from the list above.".format(nr_input))
         if not self.append:
             self.append = shlex.split(input("Command to execute: "))
-        if serv_nr > len(service_list) or serv_nr < 2:
-            RuntimeError(
-                    "Specified index doesn't match to a container in that service!")
+        if serv_nr > len(service_list) or serv_nr < 1:
+            raise RuntimeError(
+                "Error: Container selection '{0}' out of range.\n"
+                "Valid range is 1-{1}. Please select a container from the list above.".format(
+                    serv_nr, len(service_list)))
         subprocess.run(DOCKER_COMPOSE_CMD + ['exec', service_list[serv_nr - 1]] + self.append, cwd=self.path)
 
     # Beginning of own commands
@@ -99,30 +118,57 @@ class Commands(Base__funcs):
             Commands(self.compose_name, self.path_arg.rstrip("docker-compose.yml")).add()
         else:
             self.path_arg = self.path_arg.rstrip("/")
-            os.symlink(self.path_arg, self.path), 'ls'
+            if not os.path.exists(self.path_arg):
+                raise RuntimeError(
+                    "Error: Path '{0}' does not exist.\n"
+                    "Please provide a valid path to a docker-compose directory.".format(self.path_arg))
+            if not os.path.isdir(self.path_arg):
+                raise RuntimeError(
+                    "Error: '{0}' is not a directory.\n"
+                    "Please provide a directory containing docker-compose files.".format(self.path_arg))
+            try:
+                os.symlink(self.path_arg, self.path)
+                print("Successfully linked '{0}' to {1}".format(self.compose_name, self.path_arg))
+            except FileExistsError:
+                raise RuntimeError(
+                    "Error: Composition '{0}' already exists at {1}".format(
+                        self.compose_name, self.path))
+            except PermissionError:
+                raise RuntimeError(
+                    "Error: Permission denied creating symlink at '{0}'.\n"
+                    "You may need sudo privileges.".format(self.path))
 
     def remove(self):
         self.checkpath()
         if os.path.islink(self.path):
             os.remove(self.path)
-            print("Symlink: origin still exists")
+            print("Removed symlink for '{0}' (original still exists)".format(self.compose_name))
         elif os.path.isdir(self.path):
             shutil.rmtree(self.path)
+            print("Removed composition directory for '{0}'".format(self.compose_name))
         else:
-            raise RuntimeError("Can't remove: Neither link nor directory")
+            raise RuntimeError(
+                "Error: Cannot remove '{0}'.\n"
+                "Path '{1}' is neither a symlink nor a directory.".format(
+                    self.compose_name, self.path))
 
     def edit(self):
         self.checkpath()
         available_files = os.listdir(self.path)
         filepath = ""
         if "docker-compose.yml" in available_files and "docker-compose.yaml" in available_files:
-            raise RuntimeError("More than one compose YAML in {0}".format(self.path))
+            raise RuntimeError(
+                "Error: Multiple docker-compose files found in '{0}'.\n"
+                "Found: docker-compose.yml and docker-compose.yaml\n"
+                "Please keep only one file.".format(self.path))
         elif "docker-compose.yml" in available_files:
             filepath = os.path.join(self.path, "docker-compose.yml")
         elif "docker-compose.yaml" in available_files:
             filepath = os.path.join(self.path, "docker-compose.yaml")
         else:
-            raise RuntimeError("No docker-compose.y*ml in {0}".format(self.path))
+            raise RuntimeError(
+                "Error: No docker-compose file found in '{0}'.\n"
+                "Expected either 'docker-compose.yml' or 'docker-compose.yaml'.".format(self.path))
         subprocess.call([self.EDITOR, filepath])
 
     def show(self):
@@ -130,9 +176,22 @@ class Commands(Base__funcs):
         self.edit()
 
     def create(self):
-        os.mkdir(self.path)
-        with open(os.path.join(self.path, "docker-compose.yaml"), "w") as fobj:
-            fobj.writelines("#This is a autogenerated compose-yaml by dockerctl")
+        try:
+            os.mkdir(self.path)
+        except FileExistsError:
+            raise RuntimeError(
+                "Error: Composition directory already exists at '{0}'".format(self.path))
+        except PermissionError:
+            raise RuntimeError(
+                "Error: Permission denied creating directory at '{0}'.\n"
+                "You may need sudo privileges.".format(self.path))
+        try:
+            with open(os.path.join(self.path, "docker-compose.yaml"), "w") as fobj:
+                fobj.writelines("# Docker Compose file for '{0}'\n# Auto-generated by dockerctl\n".format(self.compose_name))
+        except IOError as e:
+            raise RuntimeError(
+                "Error: Failed to create docker-compose.yaml in '{0}'.\n{1}".format(
+                    self.path, str(e)))
         self.edit()
 
     def update(self):
