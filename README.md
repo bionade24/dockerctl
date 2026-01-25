@@ -44,3 +44,5 @@ usage: dockerctl [-h] [-v] [-l] [--list] [--path PATH] COMMAND COMPOSE_NAME [ext
              create: Create dir with compos_name under /etc/docker
              update: Runs pull and up in one command to update a composition.
 ```
+
+DISCLAIMER: Almost everything in the diff between version 1.1 and 1.2 has been vibe-coded to try out its possibilities.
