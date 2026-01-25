@@ -5,7 +5,7 @@ import getopt
 from dockerctl.executor import Commands
 from dockerctl import help_page
 
-VERSION_NR = "1.1"
+VERSION_NR = "1.2"
 
 
 def main(argv):
