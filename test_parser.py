@@ -341,6 +341,37 @@ class TestParserPathVariations(unittest.TestCase):
         mock_commands_class.assert_called_once_with('myapp', '../compose/docker-compose.yml', [])
 
 
+class TestParserMultipleComposeNames(unittest.TestCase):
+    """Tests for operating on several compose names in one invocation."""
+
+    @patch('dockerctl.parser.Commands')
+    def test_multiple_compose_names_run_same_command(self, mock_commands_class):
+        """A single command should apply to each compose name in order."""
+        mock_instance = MagicMock()
+        mock_commands_class.return_value = mock_instance
+
+        main(['start', 'app1', 'app2', 'app3'])
+
+        self.assertEqual(mock_commands_class.call_count, 3)
+        self.assertEqual(
+            [call_args.args for call_args in mock_commands_class.call_args_list],
+            [('app1', None, []), ('app2', None, []), ('app3', None, [])],
+        )
+        self.assertEqual(mock_instance.exec_cmd.call_count, 3)
+        self.assertEqual([call_args[0][0] for call_args in mock_instance.exec_cmd.call_args_list], ['start', 'start', 'start'])
+
+    @patch('dockerctl.parser.Commands')
+    def test_path_option_is_retained_for_single_compose_name(self, mock_commands_class):
+        """If exactly one compose name is passed, `--path` should remain effective."""
+        mock_instance = MagicMock()
+        mock_commands_class.return_value = mock_instance
+
+        main(['--path', '/custom/path', 'logs', 'myapp', '-f'])
+
+        mock_commands_class.assert_called_once_with('myapp', '/custom/path', ['-f'])
+        mock_instance.exec_cmd.assert_called_once_with('logs')
+
+
 class TestParserUpdateSubcommands(unittest.TestCase):
     """Tests for update transaction flags."""
 

@@ -1,28 +1,29 @@
 explanation = '''
-usage: dockerctl [-h] [-v] [-l] [--list] [--path PATH] COMMAND COMPOSE_NAME [extra ARGS passed to docker-compose]
+usage: dockerctl [--path PATH] COMMAND COMPOSE_NAME [COMPOSE_NAME ...] [extra ARGS passed to docker-compose]
 
-             start: Start the composition
-             stop: Stop the composition
-             restart: Restart it.
-             ps: Show processes of services in composition.
-             up: Calls docker-compose up -d, composition runs as daemon afterwards.
-             down: Calls docker-compose down, composition gets stopped and deleted.
-             kill: Kill the whole composition, if you don't pass extra args.
-             rm: Removes all volumes created by the compose yaml.
-             top: Get information about the processes in the services.
-             logs: Get the logs of the whole composition. Pass -f to get ongoing information.
+             start: Start one or more compositions.
+             stop: Stop one or more compositions.
+             restart: Restart one or more compositions.
+             ps: Show processes of services in one or more compositions.
+             up: Calls docker-compose up -d for one or more compositions.
+             down: Calls docker-compose down for one or more compositions.
+             kill: Kill one or more compositions.
+             rm: Remove volumes created by one or more compose files.
+             top: Get information about processes in one or more services.
+             logs: Get logs for one or more compositions. Pass -f for ongoing output.
              images: Shows images used by the services in the composition.
-             port: Shows the port used and mapped by the composition.
-             pull: Pull images needed by the composition.
+             port: Shows ports used and mapped by the composition.
+             pull: Pull images needed by one or more compositions.
              push: Push built images of the composition.
-             pause: Pause all services in the composition.
-             unpause: Unpause them.
+             pause: Pause services in one or more compositions.
+             unpause: Unpause services in one or more compositions.
              add: Links the current dir to a folder with the compose_name under /etc/docker.
-                Use [--path] to symlink another path than curdir.
+                Use [--path] only when exactly one compose name is supplied.
              remove: Removes composition folder or link under /etc/docker
              exec: Exec something in a service of a container. [ARGS] can optionally be used to write the command.
              edit: Edit the docker-compose.yml. Uses the EDITOR env var.
              show: Shows the docker-compose.yml in less.
-             create: Create dir with compos_name under /etc/docker
+             create: Create dir with compose_name under /etc/docker
              update: Runs pull and up in one command to update a composition.
+                     Supports update --backup NAME, update --rollback NAME, and update --commit NAME.
     '''

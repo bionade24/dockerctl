@@ -3,7 +3,7 @@
 ## Overview
 The test suite in `test_parser.py` provides comprehensive coverage of all valid input option combinations for the dockerctl parser using Python's `unittest` framework.
 
-The suite currently validates 38 tests, including the update transaction lifecycle for backup, rollback, and commit-style image handling.
+The suite currently validates 43 tests, including multi-compose execution and the update transaction lifecycle for backup, rollback, and commit-style image handling.
 
 ## Test Coverage
 
@@ -75,6 +75,10 @@ The suite currently validates 38 tests, including the update transaction lifecyc
 - `test_update_rollback_flag_parses_compose_name`: Verifies the preferred `update --rollback NAME` form
 - `test_update_commit_flag_parses_compose_name`: Verifies the preferred `update --commit NAME` form
 
+### 13. **TestParserMultipleComposeNames** (2 tests)
+- `test_multiple_compose_names_run_same_command`: Verifies one command can target several compose names in sequence
+- `test_path_option_is_retained_for_single_compose_name`: Verifies `--path` remains active when there is only one compose name
+
 ## Key Features
 
 ### Mocking Strategy
@@ -95,7 +99,8 @@ The suite currently validates 38 tests, including the update transaction lifecyc
 5. **All 23 supported commands**
 6. **Additional arguments for docker-compose**
 7. **Option combinations** (e.g., `--path` with commands and additional args)
-8. **Update transaction modes**: backup, rollback, and commit semantics for image-tag recovery
+8. **Multiple compose names**: one command can target several compose names in a single invocation
+9. **Update transaction modes**: backup, rollback, and commit semantics for image-tag recovery
 
 ### Error Cases
 - Missing required arguments
@@ -116,12 +121,13 @@ python -m unittest test_parser.TestParserVersion.test_version_long_option -v
 ```
 
 ## Test Results
-All 38 tests verify that:
+All 43 tests verify that:
 1. Option parsing works correctly with getopt
 2. Help, version, and list options exit immediately
-3. Commands are properly parsed with their compose name
+3. Commands are properly parsed with one or many compose names
 4. Additional arguments are preserved and passed through
-5. Path options are correctly captured and forwarded
+5. Path options are correctly captured and forwarded for single-name calls
 6. Error cases are handled gracefully
-7. Update backup/rollback/commit lifecycle behaves as expected
-8. No file system access is required
+7. Multi-compose execution works in a single command invocation
+8. Update backup/rollback/commit lifecycle behaves as expected
+9. No file system access is required
