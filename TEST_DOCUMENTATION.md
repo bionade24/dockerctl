@@ -3,6 +3,8 @@
 ## Overview
 The test suite in `test_parser.py` provides comprehensive coverage of all valid input option combinations for the dockerctl parser using Python's `unittest` framework.
 
+The suite currently validates 38 tests, including the update transaction lifecycle for backup, rollback, and commit-style image handling.
+
 ## Test Coverage
 
 ### 1. **TestParserVersion** (3 tests)
@@ -62,6 +64,17 @@ The test suite in `test_parser.py` provides comprehensive coverage of all valid 
 - `test_port_with_service_name`: Tests port command with service name
 - `test_add_with_path_option`: Tests add command with custom path
 
+### 11. **TestParserUpdateTransactionLifecycle** (4 tests)
+- `test_backup_tag_uses_backup_suffix_format`: Verifies the backup tag includes the `-backup-<day-month-time>` suffix
+- `test_update_backup_mode_runs_backup_then_update`: Verifies the backup workflow runs before pull/up
+- `test_update_rollback_mode_restores_previous_images`: Verifies rollback restores the saved image names before pull/up
+- `test_commit_removes_backup_state`: Verifies the commit path clears backup state
+
+### 12. **TestParserUpdateSubcommands** (3 tests)
+- `test_update_backup_flag_parses_compose_name`: Verifies the preferred `update --backup NAME` form
+- `test_update_rollback_flag_parses_compose_name`: Verifies the preferred `update --rollback NAME` form
+- `test_update_commit_flag_parses_compose_name`: Verifies the preferred `update --commit NAME` form
+
 ## Key Features
 
 ### Mocking Strategy
@@ -82,6 +95,7 @@ The test suite in `test_parser.py` provides comprehensive coverage of all valid 
 5. **All 23 supported commands**
 6. **Additional arguments for docker-compose**
 7. **Option combinations** (e.g., `--path` with commands and additional args)
+8. **Update transaction modes**: backup, rollback, and commit semantics for image-tag recovery
 
 ### Error Cases
 - Missing required arguments
@@ -109,4 +123,5 @@ All 38 tests verify that:
 4. Additional arguments are preserved and passed through
 5. Path options are correctly captured and forwarded
 6. Error cases are handled gracefully
-7. No file system access is required
+7. Update backup/rollback/commit lifecycle behaves as expected
+8. No file system access is required

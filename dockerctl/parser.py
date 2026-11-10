@@ -50,8 +50,17 @@ def main(argv):
         sys.exit(1)
 
     command = args[0]
-    compose_name = args[1]
-    additional_args = args[2:] if len(args) > 2 else []
+    if command == 'update' and len(args) >= 3 and args[1].startswith('--'):
+        update_mode = args[1]
+        compose_name = args[2]
+        additional_args = [update_mode] + args[3:]
+    elif command == 'update' and len(args) >= 3 and args[1] in ('backup', 'rollback', 'commit'):
+        update_mode = args[1]
+        compose_name = args[2]
+        additional_args = [update_mode] + args[3:]
+    else:
+        compose_name = args[1]
+        additional_args = args[2:] if len(args) > 2 else []
 
     # Create executor and run command
     cmd_executor = Commands(compose_name, path_arg, additional_args)

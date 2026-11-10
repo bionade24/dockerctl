@@ -341,6 +341,43 @@ class TestParserPathVariations(unittest.TestCase):
         mock_commands_class.assert_called_once_with('myapp', '../compose/docker-compose.yml', [])
 
 
+class TestParserUpdateSubcommands(unittest.TestCase):
+    """Tests for update transaction flags."""
+
+    @patch('dockerctl.parser.Commands')
+    def test_update_backup_flag_parses_compose_name(self, mock_commands_class):
+        """`dockerctl update --backup NAME` should preserve the compose name and pass the flag."""
+        mock_instance = MagicMock()
+        mock_commands_class.return_value = mock_instance
+
+        main(['update', '--backup', 'myapp'])
+
+        mock_commands_class.assert_called_once_with('myapp', None, ['--backup'])
+        mock_instance.exec_cmd.assert_called_once_with('update')
+
+    @patch('dockerctl.parser.Commands')
+    def test_update_rollback_flag_parses_compose_name(self, mock_commands_class):
+        """`dockerctl update --rollback NAME` should preserve the compose name and pass the flag."""
+        mock_instance = MagicMock()
+        mock_commands_class.return_value = mock_instance
+
+        main(['update', '--rollback', 'myapp'])
+
+        mock_commands_class.assert_called_once_with('myapp', None, ['--rollback'])
+        mock_instance.exec_cmd.assert_called_once_with('update')
+
+    @patch('dockerctl.parser.Commands')
+    def test_update_commit_flag_parses_compose_name(self, mock_commands_class):
+        """`dockerctl update --commit NAME` should preserve the compose name and pass the flag."""
+        mock_instance = MagicMock()
+        mock_commands_class.return_value = mock_instance
+
+        main(['update', '--commit', 'myapp'])
+
+        mock_commands_class.assert_called_once_with('myapp', None, ['--commit'])
+        mock_instance.exec_cmd.assert_called_once_with('update')
+
+
 class TestParserComplexScenarios(unittest.TestCase):
     """Tests for complex real-world scenarios."""
 
@@ -387,6 +424,59 @@ class TestParserComplexScenarios(unittest.TestCase):
 
         mock_commands_class.assert_called_once_with('myapp', '/home/user/my-compose', [])
         mock_instance.exec_cmd.assert_called_once_with('add')
+
+
+class TestParserUpdateTransactionLifecycle(unittest.TestCase):
+    """Tests for update transaction backup/rollback semantics."""
+
+    @patch('dockerctl.executor.subprocess.run')
+    def test_backup_tag_uses_backup_suffix_format(self, mock_run):
+        """A backup tag should include the backup suffix and timestamp."""
+        mock_run.return_value.returncode = 0
+        cmd = __import__('dockerctl.executor', fromlist=['Commands']).Commands.__new__(
+            __import__('dockerctl.executor', fromlist=['Commands']).Commands
+        )
+        tag = cmd._backup_image_tag('example/app:1.2.3')
+        self.assertRegex(tag, r'^example/app:1\.2\.3-backup-\d{2}-\d{2}-\d{2}-\d{2}$')
+
+    @patch('dockerctl.executor.subprocess.run')
+    @patch.object(__import__('dockerctl.executor', fromlist=['Commands']).Commands, '_backup_images')
+    def test_update_backup_mode_runs_backup_then_update(self, mock_backup_images, mock_run):
+        """Update backup mode must preserve the current image before pulling and recreating."""
+        mock_run.return_value.returncode = 0
+        cmd = __import__('dockerctl.executor', fromlist=['Commands']).Commands.__new__(
+            __import__('dockerctl.executor', fromlist=['Commands']).Commands
+        )
+        cmd.path = '/tmp/myapp'
+        cmd.append = ['backup']
+        cmd.exec_cmd = MagicMock()
+        cmd.update()
+        mock_backup_images.assert_called_once()
+        cmd.exec_cmd.assert_has_calls([call('pull'), call('up')])
+
+    @patch('dockerctl.executor.subprocess.run')
+    @patch.object(__import__('dockerctl.executor', fromlist=['Commands']).Commands, '_restore_images')
+    def test_update_rollback_mode_restores_previous_images(self, mock_restore_images, mock_run):
+        """Rollback mode should restore the last backup before recreating the stack."""
+        mock_run.return_value.returncode = 0
+        cmd = __import__('dockerctl.executor', fromlist=['Commands']).Commands.__new__(
+            __import__('dockerctl.executor', fromlist=['Commands']).Commands
+        )
+        cmd.path = '/tmp/myapp'
+        cmd.append = ['rollback']
+        cmd.exec_cmd = MagicMock()
+        cmd.update()
+        mock_restore_images.assert_called_once()
+        cmd.exec_cmd.assert_has_calls([call('pull'), call('up')])
+
+    @patch.object(__import__('dockerctl.executor', fromlist=['Commands']).Commands, '_clear_backup_state')
+    def test_commit_removes_backup_state(self, mock_clear):
+        """Commit mode should finalize the transaction by removing any backup state."""
+        cmd = __import__('dockerctl.executor', fromlist=['Commands']).Commands.__new__(
+            __import__('dockerctl.executor', fromlist=['Commands']).Commands
+        )
+        cmd.commit()
+        mock_clear.assert_called_once()
 
 
 if __name__ == '__main__':

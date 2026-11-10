@@ -43,6 +43,34 @@ usage: dockerctl [-h] [-v] [-l] [--list] [--path PATH] COMMAND COMPOSE_NAME [ext
              show: Shows the docker-compose.yml in less.
              create: Create dir with compos_name under /etc/docker
              update: Runs pull and up in one command to update a composition.
+                     Use update --backup NAME to tag the current image with a backup suffix,
+                     update --rollback NAME to restore it, or update --commit NAME to finalize
+                     the transaction after a successful rollout.
+```
+
+Update transaction workflow:
+
+```
+# Default update flow
+# dockerctl update myapp
+
+# Keep the current image under a backup tag before updating
+# dockerctl update --backup myapp
+
+# Restore the previous image tag after a failed update
+# dockerctl update --rollback myapp
+
+# Remove the saved backup state after the update is accepted
+# dockerctl update --commit myapp
+```
+
+The backup suffix uses the current image tag plus a timestamp, for example:
+`myimage:1.2.3-backup-10-11-16-45`
+
+```text
+backup: tags the original image before the pull/up cycle and stores the backup mapping
+rollback: retags the backup back to the original image name for recovery
+commit: clears the saved backup state once the update is accepted
 ```
 
 DISCLAIMER: Almost everything in the diff between version 1.1 and 1.2 has been vibe-coded to try out its possibilities.

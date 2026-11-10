@@ -4,6 +4,7 @@ import os
 import shutil
 import shlex
 import glob
+from datetime import datetime
 
 
 DOCKER_COMPOSE_CMD = ["docker", "compose"]
@@ -198,10 +199,85 @@ class Commands(Base__funcs):
                     self.path, str(e)))
         self.edit()
 
+    def _backup_image_tag(self, image_name):
+        stamp = datetime.now().strftime("%d-%m-%H-%M")
+        return "{0}-backup-{1}".format(image_name, stamp)
+
+    def _service_images(self):
+        result = subprocess.run(
+            DOCKER_COMPOSE_CMD + ['config', '--format=json'],
+            cwd=self.path,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return {}
+        try:
+            payload = __import__('json').loads(result.stdout or '{}')
+        except ValueError:
+            return {}
+
+        images = {}
+        services = payload.get('services', {})
+        for service_name, service_data in services.items():
+            if not isinstance(service_data, dict):
+                continue
+            image_name = service_data.get('image')
+            if image_name:
+                images[service_name] = image_name
+        return images
+
+    def _backup_images(self):
+        image_map = self._service_images()
+        backup_map = {}
+        for service_name, image_name in image_map.items():
+            backup_name = self._backup_image_tag(image_name)
+            subprocess.run(['docker', 'tag', image_name, backup_name], check=False)
+            backup_map[service_name] = {'original': image_name, 'backup': backup_name}
+        self._backup_state = backup_map
+        return backup_map
+
+    def _restore_images(self):
+        backup_map = getattr(self, '_backup_state', {})
+        for service_name, backup in backup_map.items():
+            subprocess.run(['docker', 'tag', backup['backup'], backup['original']], check=False)
+        return backup_map
+
+    def _clear_backup_state(self):
+        backup_map = getattr(self, '_backup_state', {})
+        for backup in backup_map.values():
+            subprocess.run(['docker', 'rmi', backup['backup']], check=False)
+        self._backup_state = {}
+        return backup_map
+
     def update(self):
-        # TODO:Can I check if it was updated?
+        if not self.append:
+            self.exec_cmd("pull")
+            self.exec_cmd("up")
+            return
+
+        action = str(self.append[0]).lstrip('-').lower()
+        if action in ('backup', 'commit', 'rollback'):
+            if action == 'backup':
+                self._backup_images()
+            elif action == 'rollback':
+                self._restore_images()
+            elif action == 'commit':
+                self._clear_backup_state()
+            self.exec_cmd("pull")
+            self.exec_cmd("up")
+            return
+
         self.exec_cmd("pull")
         self.exec_cmd("up")
+
+    def commit(self):
+        self._clear_backup_state()
+
+    def rollback(self):
+        self._restore_images()
 
     @staticmethod
     def ls():
