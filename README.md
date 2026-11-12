@@ -39,7 +39,7 @@ usage: dockerctl [-h] [-v] [-l] [--list] [--path PATH] COMMAND COMPOSE_NAME [COM
                  Use [--path] only when exactly one compose name is supplied.
              remove: Remove a composition folder or link under /etc/docker.
              exec: Execute something in a service of a container. [ARGS] can optionally be used to write the command.
-             edit: Edit the docker-compose.yml. Uses the EDITOR env var.
+             edit: Edit the docker-compose.yml. Uses the EDITOR env var and prompts only when a matching backup image exists.
              show: Show the docker-compose.yml in less.
              create: Create a dir with compose_name under /etc/docker.
              update: Pull and recreate a composition.
@@ -54,12 +54,21 @@ Notes:
 Update transaction workflow:
 
 The backup suffix uses the current image tag plus a timestamp, for example:
-`myimage:1.2.3-backup-10-11-16-45`
+`myimage:1.2.3-backup-20261112180000`
 
 ```text
-backup: tags the original image before the pull/up cycle and stores the backup mapping
-rollback: retags the backup back to the original image name for recovery
+backup: tags the original image before the pull/up cycle
+rollback: finds the newest matching backup tag, restores it, and recreates the services without pulling
 commit: clears the saved backup state once the update is accepted
 ```
+
+Docker smoke test:
+==
+
+Run `bash scripts/smoke-test.sh` to exercise `dockerctl` against a disposable
+Compose service on the current Docker daemon. The script checks `up`, `logs`,
+`stop`, `start`, `down`, and a backup/update/rollback cycle using a disposable
+local registry. It removes its temporary containers, images, and Compose
+files. It does not use or modify production services.
 
 DISCLAIMER: Almost everything in the diff between version 1.1 and 1.2 has been vibe-coded to try out its possibilities.

@@ -468,7 +468,7 @@ class TestParserUpdateTransactionLifecycle(unittest.TestCase):
             __import__('dockerctl.executor', fromlist=['Commands']).Commands
         )
         tag = cmd._backup_image_tag('example/app:1.2.3')
-        self.assertRegex(tag, r'^example/app:1\.2\.3-backup-\d{2}-\d{2}-\d{2}-\d{2}$')
+        self.assertRegex(tag, r'^example/app:1\.2\.3-backup-\d{14}$')
 
     @patch('dockerctl.executor.subprocess.run')
     @patch.object(__import__('dockerctl.executor', fromlist=['Commands']).Commands, '_backup_images')
@@ -484,6 +484,7 @@ class TestParserUpdateTransactionLifecycle(unittest.TestCase):
         cmd.update()
         mock_backup_images.assert_called_once()
         cmd.exec_cmd.assert_has_calls([call('pull'), call('up')])
+        self.assertEqual(cmd.append, [])
 
     @patch('dockerctl.executor.subprocess.run')
     @patch.object(__import__('dockerctl.executor', fromlist=['Commands']).Commands, '_restore_images')
@@ -498,7 +499,66 @@ class TestParserUpdateTransactionLifecycle(unittest.TestCase):
         cmd.exec_cmd = MagicMock()
         cmd.update()
         mock_restore_images.assert_called_once()
-        cmd.exec_cmd.assert_has_calls([call('pull'), call('up')])
+        cmd.exec_cmd.assert_called_once_with('up')
+        self.assertEqual(cmd.append, ['--force-recreate'])
+
+    @patch('dockerctl.executor.subprocess.run')
+    @patch.object(
+        __import__('dockerctl.executor', fromlist=['Commands']).Commands,
+        '_service_images',
+        return_value={'web': 'example/app:1.2.3'},
+    )
+    def test_rollback_discovers_backup_from_a_separate_invocation(
+        self, mock_service_images, mock_run
+    ):
+        from dockerctl.executor import Commands
+
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = (
+            'example/app:1.2.3-backup-20261112180000\n'
+            'example/app:1.2.3-backup-20261112190000\n'
+        )
+        cmd = Commands.__new__(Commands)
+
+        backups = cmd._restore_images()
+
+        self.assertEqual(
+            backups['web'],
+            {
+                'original': 'example/app:1.2.3',
+                'backup': 'example/app:1.2.3-backup-20261112190000',
+            },
+        )
+        mock_service_images.assert_called_once()
+        self.assertEqual(mock_run.call_args_list[-1].args[0], [
+            'docker', 'tag',
+            'example/app:1.2.3-backup-20261112190000',
+            'example/app:1.2.3',
+        ])
+
+    @patch('dockerctl.executor.subprocess.run')
+    @patch.object(
+        __import__('dockerctl.executor', fromlist=['Commands']).Commands,
+        '_service_images',
+        return_value={
+            'web': 'example/app:1.2.3',
+            'worker': 'example/worker:1.2.3',
+        },
+    )
+    def test_rollback_fails_before_partial_restore_when_a_backup_is_missing(
+        self, mock_service_images, mock_run
+    ):
+        from dockerctl.executor import Commands
+
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = 'example/app:1.2.3-backup-20261112190000\n'
+        cmd = Commands.__new__(Commands)
+
+        with self.assertRaisesRegex(RuntimeError, 'worker'):
+            cmd._restore_images()
+
+        mock_service_images.assert_called_once()
+        mock_run.assert_called_once()
 
     @patch.object(__import__('dockerctl.executor', fromlist=['Commands']).Commands, '_clear_backup_state')
     def test_commit_removes_backup_state(self, mock_clear):
@@ -508,6 +568,142 @@ class TestParserUpdateTransactionLifecycle(unittest.TestCase):
         )
         cmd.commit()
         mock_clear.assert_called_once()
+
+
+class TestEditConfirmation(unittest.TestCase):
+    """Tests that editing a compose file requires confirmation."""
+
+    @patch.object(
+        __import__('dockerctl.executor', fromlist=['Commands']).Commands,
+        '_has_backup_images',
+        return_value=True,
+    )
+    @patch('builtins.input', return_value='y')
+    def test_edit_proceeds_when_confirmed(self, mock_input, mock_has_backup_images):
+        from dockerctl.executor import Commands
+
+        cmd = Commands.__new__(Commands)
+        with patch.object(cmd, 'edit') as mock_edit:
+            cmd.exec_cmd('edit')
+
+        mock_has_backup_images.assert_called_once()
+        mock_input.assert_called_once()
+        mock_edit.assert_called_once()
+
+    @patch.object(
+        __import__('dockerctl.executor', fromlist=['Commands']).Commands,
+        '_has_backup_images',
+        return_value=True,
+    )
+    @patch('builtins.input', return_value='n')
+    def test_edit_is_cancelled_when_declined(self, mock_input, mock_has_backup_images):
+        from dockerctl.executor import Commands
+
+        cmd = Commands.__new__(Commands)
+        with patch.object(cmd, 'edit') as mock_edit, patch('sys.stdout', new=StringIO()) as fake_out:
+            cmd.exec_cmd('edit')
+
+        mock_has_backup_images.assert_called_once()
+        mock_input.assert_called_once()
+        mock_edit.assert_not_called()
+        self.assertIn('Edit cancelled.', fake_out.getvalue())
+
+    @patch.object(
+        __import__('dockerctl.executor', fromlist=['Commands']).Commands,
+        '_has_backup_images',
+        return_value=False,
+    )
+    @patch('builtins.input')
+    def test_edit_does_not_prompt_without_matching_backup(
+        self, mock_input, mock_has_backup_images
+    ):
+        from dockerctl.executor import Commands
+
+        cmd = Commands.__new__(Commands)
+        with patch.object(cmd, 'edit') as mock_edit:
+            cmd.exec_cmd('edit')
+
+        mock_has_backup_images.assert_called_once()
+        mock_input.assert_not_called()
+        mock_edit.assert_called_once()
+
+    @patch('builtins.input')
+    def test_show_does_not_prompt_for_edit_confirmation(self, mock_input):
+        from dockerctl.executor import Commands
+
+        cmd = Commands.__new__(Commands)
+        cmd.show = MagicMock()
+        cmd.exec_cmd('show')
+
+        mock_input.assert_not_called()
+        cmd.show.assert_called_once()
+
+    @patch('dockerctl.executor.subprocess.run')
+    @patch.object(
+        __import__('dockerctl.executor', fromlist=['Commands']).Commands,
+        '_service_images',
+        return_value={'web': 'example/app:1.2.3'},
+    )
+    def test_backup_detection_matches_compose_image_and_timestamp(
+        self, mock_service_images, mock_run
+    ):
+        from dockerctl.executor import Commands
+
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = (
+            'example/app:1.2.3-backup-10-11-16-45\n'
+            'example/app:1.2.3-backup-20261112180000\n'
+            'unrelated/app:latest-backup-10-11-16-45\n'
+        )
+        cmd = Commands.__new__(Commands)
+
+        self.assertTrue(cmd._has_backup_images())
+        mock_service_images.assert_called_once()
+        mock_run.assert_called_once_with(
+            ['docker', 'image', 'ls', '--format', '{{.Repository}}:{{.Tag}}'],
+            stdout=__import__('subprocess').PIPE,
+            stderr=__import__('subprocess').PIPE,
+            text=True,
+            check=False,
+        )
+
+    @patch('dockerctl.executor.subprocess.run')
+    @patch.object(
+        __import__('dockerctl.executor', fromlist=['Commands']).Commands,
+        '_service_images',
+        return_value={'web': 'example/app:1.2.3'},
+    )
+    def test_backup_detection_ignores_unrelated_or_malformed_images(
+        self, mock_service_images, mock_run
+    ):
+        from dockerctl.executor import Commands
+
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = (
+            'example/app:1.2.3-backup-not-a-timestamp\n'
+            'example/app:other-backup-10-11-16-45\n'
+        )
+        cmd = Commands.__new__(Commands)
+
+        self.assertFalse(cmd._has_backup_images())
+        mock_service_images.assert_called_once()
+
+    @patch('dockerctl.executor.subprocess.run')
+    @patch.object(
+        __import__('dockerctl.executor', fromlist=['Commands']).Commands,
+        '_service_images',
+        return_value={},
+    )
+    def test_backup_detection_skips_docker_lookup_without_compose_images(
+        self, mock_service_images, mock_run
+    ):
+        from dockerctl.executor import Commands
+
+        cmd = Commands.__new__(Commands)
+
+        self.assertFalse(cmd._has_backup_images())
+        mock_service_images.assert_called_once()
+        mock_run.assert_not_called()
 
 
 if __name__ == '__main__':

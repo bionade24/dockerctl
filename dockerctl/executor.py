@@ -4,6 +4,7 @@ import os
 import shutil
 import shlex
 import glob
+import re
 from datetime import datetime
 
 
@@ -73,6 +74,14 @@ class Commands(Base__funcs):
         elif compose_cmd in self.DEVIATE_CMDS.keys():
             self.map_cmd(self.DEVIATE_CMDS[compose_cmd])
         elif hasattr(self, compose_cmd):
+            if compose_cmd == "edit" and self._has_backup_images():
+                answer = input(
+                    "Warning: Changing service or container names may make existing "
+                    "backup images harder to identify for recovery. Continue editing? [y/N]: "
+                )
+                if answer.strip().lower() not in ("y", "yes"):
+                    print("Edit cancelled.")
+                    return
             getattr(self, compose_cmd)()
         else:
             supported_cmds = (self.PASSTROUGH_CMDS + list(self.DEVIATE_CMDS.keys()) + 
@@ -200,8 +209,47 @@ class Commands(Base__funcs):
         self.edit()
 
     def _backup_image_tag(self, image_name):
-        stamp = datetime.now().strftime("%d-%m-%H-%M")
+        stamp = datetime.now().strftime("%Y%m%d%H%M%S")
         return "{0}-backup-{1}".format(image_name, stamp)
+
+    def _backup_image_candidates(self, image_name, existing_images):
+        prefix = image_name + '-backup-'
+        candidates = []
+        for existing_image in existing_images:
+            if not existing_image.startswith(prefix):
+                continue
+
+            stamp = existing_image[len(prefix):]
+            if stamp.endswith(':latest'):
+                stamp = stamp[:-len(':latest')]
+            if re.fullmatch(r'\d{14}', stamp):
+                sort_key = stamp
+            else:
+                try:
+                    now = datetime.now()
+                    day, month, hour, minute = map(int, stamp.split('-'))
+                    legacy_stamp = datetime(
+                        now.year, month, day, hour, minute)
+                    if legacy_stamp > now:
+                        legacy_stamp = legacy_stamp.replace(year=now.year - 1)
+                    sort_key = legacy_stamp.strftime('%Y%m%d%H%M%S')
+                except ValueError:
+                    continue
+            candidates.append((sort_key, existing_image))
+        return sorted(candidates)
+
+    def _docker_image_names(self):
+        result = subprocess.run(
+            ['docker', 'image', 'ls', '--format', '{{.Repository}}:{{.Tag}}'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                "Error: Failed to check Docker images.\n{0}".format(result.stderr.strip()))
+        return result.stdout.splitlines()
 
     def _service_images(self):
         result = subprocess.run(
@@ -229,20 +277,52 @@ class Commands(Base__funcs):
                 images[service_name] = image_name
         return images
 
+    def _has_backup_images(self):
+        image_names = list(self._service_images().values())
+        if not image_names:
+            return False
+
+        existing_images = self._docker_image_names()
+        return any(
+            self._backup_image_candidates(image_name, existing_images)
+            for image_name in image_names
+        )
+
     def _backup_images(self):
         image_map = self._service_images()
         backup_map = {}
         for service_name, image_name in image_map.items():
             backup_name = self._backup_image_tag(image_name)
-            subprocess.run(['docker', 'tag', image_name, backup_name], check=False)
+            subprocess.run(['docker', 'tag', image_name, backup_name], check=True)
             backup_map[service_name] = {'original': image_name, 'backup': backup_name}
         self._backup_state = backup_map
         return backup_map
 
     def _restore_images(self):
         backup_map = getattr(self, '_backup_state', {})
+        if not backup_map:
+            image_map = self._service_images()
+            existing_images = self._docker_image_names()
+            missing_backups = []
+            for service_name, image_name in image_map.items():
+                candidates = self._backup_image_candidates(image_name, existing_images)
+                if candidates:
+                    backup_map[service_name] = {
+                        'original': image_name,
+                        'backup': candidates[-1][1],
+                    }
+                else:
+                    missing_backups.append(service_name)
+            if missing_backups:
+                raise RuntimeError(
+                    "Error: No Docker backup image found for service(s): {0}".format(
+                        ', '.join(missing_backups)))
+        if not backup_map:
+            raise RuntimeError("Error: No Docker backup images found to restore.")
+
         for service_name, backup in backup_map.items():
-            subprocess.run(['docker', 'tag', backup['backup'], backup['original']], check=False)
+            subprocess.run(['docker', 'tag', backup['backup'], backup['original']], check=True)
+        self._backup_state = backup_map
         return backup_map
 
     def _clear_backup_state(self):
@@ -260,10 +340,14 @@ class Commands(Base__funcs):
 
         action = str(self.append[0]).lstrip('-').lower()
         if action in ('backup', 'commit', 'rollback'):
+            self.append = self.append[1:]
             if action == 'backup':
                 self._backup_images()
             elif action == 'rollback':
                 self._restore_images()
+                self.append = ['--force-recreate'] + self.append
+                self.exec_cmd("up")
+                return
             elif action == 'commit':
                 self._clear_backup_state()
             self.exec_cmd("pull")
